@@ -10,6 +10,7 @@ import { join } from 'path';
 import { existsSync } from 'fs';
 
 export const runtime = 'nodejs';
+export const maxDuration = 10; // Set max duration for Netlify
 
 export async function POST(request: NextRequest) {
   try {
@@ -57,50 +58,72 @@ export async function POST(request: NextRequest) {
 
     console.log('OpenAI API key found, length:', openaiApiKey.length);
 
-    // Step 1: Extract text from CV
-    console.log('Step 1: Extracting text from CV...');
-    const textExtractor = new TextExtractorAgent();
-    const cvText = await textExtractor.extractText(file);
-    console.log('CV text extracted, length:', cvText.length);
+    try {
+      // Step 1: Extract text from CV (fast)
+      console.log('Step 1: Extracting text from CV...');
+      const textExtractor = new TextExtractorAgent();
+      const cvText = await textExtractor.extractText(file);
+      console.log('CV text extracted, length:', cvText.length);
 
-    // Step 2: Parse CV information
-    console.log('Step 2: Parsing CV information with AI...');
-    const informationParser = new InformationParserAgent(openaiApiKey);
-    const parsedCV = await informationParser.parseCV(cvText);
-    console.log('CV parsed successfully:', parsedCV.fullName);
+      // Step 2: Parse CV information (can be slow)
+      console.log('Step 2: Parsing CV information with AI...');
+      const informationParser = new InformationParserAgent(openaiApiKey);
+      
+      // Add timeout wrapper
+      const parsePromise = informationParser.parseCV(cvText);
+      const timeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('OpenAI API timeout')), 8000) // 8 seconds to leave buffer
+      );
+      
+      const parsedCV = await Promise.race([parsePromise, timeoutPromise]) as any;
+      console.log('CV parsed successfully:', parsedCV.fullName);
 
-    // Step 3: Generate engaging content
-    console.log('Step 3: Generating portfolio content...');
-    const contentGenerator = new ContentGeneratorAgent(openaiApiKey);
-    const portfolioContent = await contentGenerator.generateContent(parsedCV);
-    console.log('Portfolio content generated');
+      // Step 3: Generate engaging content (can be slow)
+      console.log('Step 3: Generating portfolio content...');
+      const contentGenerator = new ContentGeneratorAgent(openaiApiKey);
+      
+      // Add timeout wrapper for content generation too
+      const contentPromise = contentGenerator.generateContent(parsedCV);
+      const contentTimeoutPromise = new Promise((_, reject) => 
+        setTimeout(() => reject(new Error('Content generation timeout')), 8000)
+      );
+      
+      const portfolioContent = await Promise.race([contentPromise, contentTimeoutPromise]) as any;
+      console.log('Portfolio content generated');
 
-    // Generate portfolio ID
-    const portfolioId = randomUUID();
-    console.log('Portfolio ID:', portfolioId);
+      // Generate portfolio ID
+      const portfolioId = randomUUID();
+      console.log('Portfolio ID:', portfolioId);
 
-    // Skip Firebase Storage upload for now - will be handled client-side
-    console.log('Skipping CV upload to Firebase Storage (will be handled client-side)...');
-    const cvUrl = ''; // Will be updated later when client uploads
+      // Skip Firebase Storage upload for now - will be handled client-side
+      console.log('Skipping CV upload to Firebase Storage (will be handled client-side)...');
+      const cvUrl = ''; // Will be updated later when client uploads
 
-    // Generate the portfolio HTML
-    console.log('Generating portfolio HTML...');
-    const portfolioHTML = generatePortfolioHTML({
-      data: portfolioContent,
-      cvUrl,
-      profilePictureUrl: undefined, // User can add this later
-      githubProfile: undefined // User can add this later
-    });
+      // Generate the portfolio HTML
+      console.log('Generating portfolio HTML...');
+      const portfolioHTML = generatePortfolioHTML({
+        data: portfolioContent,
+        cvUrl,
+        profilePictureUrl: undefined, // User can add this later
+        githubProfile: undefined // User can add this later
+      });
 
-    // For production, we'll return the HTML and let the client save it
-    // This avoids file system issues on serverless platforms
-    console.log('Portfolio generation completed successfully!');
-    return NextResponse.json({ 
-      success: true, 
-      portfolioId,
-      portfolioHtml: portfolioHTML,
-      portfolioUrl: `/portfolios/${portfolioId}`
-    });
+      // For production, we'll return the HTML and let the client save it
+      // This avoids file system issues on serverless platforms
+      console.log('Portfolio generation completed successfully!');
+      return NextResponse.json({ 
+        success: true, 
+        portfolioId,
+        portfolioHtml: portfolioHTML,
+        portfolioUrl: `/portfolios/${portfolioId}`
+      });
+    } catch (timeoutError) {
+      console.error('Operation timed out:', timeoutError);
+      return NextResponse.json(
+        { error: 'Request timed out - OpenAI API is taking too long. Please try again.' },
+        { status: 504 }
+      );
+    }
   } catch (error) {
     console.error('Detailed error in portfolio generation:', error);
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');

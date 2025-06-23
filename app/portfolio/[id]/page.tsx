@@ -19,70 +19,56 @@ export default function PortfolioPage({ params }: { params: Promise<{ id: string
   useEffect(() => {
     const loadPortfolio = async () => {
       try {
-        // Try to load from Firebase Storage first
+        // Try to load from our API endpoint which handles Firebase Storage internally
         try {
-          // First check if the final version exists
-          const finalRef = ref(storage, `portfolios/${id}/final.html`);
-          const { getBytes } = await import('firebase/storage');
-          
-          try {
-            const finalBytes = await Promise.race([
-              getBytes(finalRef),
-              new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
-            ]);
-            
-            if (finalBytes instanceof Uint8Array) {
-              const finalHtml = new TextDecoder().decode(finalBytes);
-              setPortfolioHtml(finalHtml);
-              setExists(true);
-              setLoading(false);
-              return;
-            }
-          } catch (finalError) {
-            // Final version doesn't exist, try draft
+          // First try the final version
+          const finalResponse = await fetch(`/api/portfolio/${id}?version=final`);
+          if (finalResponse.ok) {
+            const finalHtml = await finalResponse.text();
+            setPortfolioHtml(finalHtml);
+            setExists(true);
+            setLoading(false);
+            return;
           }
+        } catch (finalError) {
+          console.log('Final version API failed:', finalError);
+        }
 
-          try {
-            // Check if the draft version exists in Firebase Storage
-            const draftRef = ref(storage, `portfolios/${id}/index.html`);
-            const draftBytes = await Promise.race([
-              getBytes(draftRef),
-              new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
-            ]);
-            
-            if (draftBytes instanceof Uint8Array) {
-              const draftHtml = new TextDecoder().decode(draftBytes);
-              setPortfolioHtml(draftHtml);
-              setExists(true);
-              setLoading(false);
-              return;
-            }
-          } catch (draftError) {
-            // Draft doesn't exist in Firebase Storage either
+        try {
+          // Try the draft version
+          const draftResponse = await fetch(`/api/portfolio/${id}?version=index`);
+          if (draftResponse.ok) {
+            const draftHtml = await draftResponse.text();
+            setPortfolioHtml(draftHtml);
+            setExists(true);
+            setLoading(false);
+            return;
           }
-        } catch (storageError) {
-          // Firebase Storage fails, try static files as fallback
-          try {
-            // First check if the final version exists as static file
-            let response = await fetch(`/portfolios/${id}/final.html`, { method: 'HEAD' });
+        } catch (draftError) {
+          console.log('Draft version API failed:', draftError);
+        }
+
+        // If API fails, try static files as fallback
+        try {
+          // First check if the final version exists as static file
+          let response = await fetch(`/portfolios/${id}/final.html`, { method: 'HEAD' });
+          
+          if (response.ok) {
+            // Redirect to the final HTML file
+            window.location.href = `/portfolios/${id}/final.html`;
+            return;
+          } else {
+            // Check if the draft version exists as static file
+            response = await fetch(`/portfolios/${id}/index.html`, { method: 'HEAD' });
             
             if (response.ok) {
-              // Redirect to the final HTML file
-              window.location.href = `/portfolios/${id}/final.html`;
+              // Redirect to the draft HTML file
+              window.location.href = `/portfolios/${id}/index.html`;
               return;
-            } else {
-              // Check if the draft version exists as static file
-              response = await fetch(`/portfolios/${id}/index.html`, { method: 'HEAD' });
-              
-              if (response.ok) {
-                // Redirect to the draft HTML file
-                window.location.href = `/portfolios/${id}/index.html`;
-                return;
-              }
             }
-          } catch (staticError) {
-            console.error('Static file check failed:', staticError);
           }
+        } catch (staticError) {
+          console.error('Static file check failed:', staticError);
         }
 
         // Nothing found

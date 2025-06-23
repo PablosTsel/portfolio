@@ -87,12 +87,19 @@ export default function GeneratePage() {
 
       const data = await response.json();
       
+      // Make sure we actually got a successful response with HTML
+      if (!data.success || !data.portfolioHtml) {
+        throw new Error(data.error || 'Failed to generate portfolio');
+      }
+      
       // Save the portfolio HTML to Firebase Storage
       if (data.portfolioHtml) {
         const portfolioRef = ref(storage, `portfolios/${data.portfolioId}/index.html`);
         await uploadString(portfolioRef, data.portfolioHtml, 'raw', {
           contentType: 'text/html',
         });
+        
+        console.log('Portfolio saved to Firebase Storage successfully');
       }
       
       clearInterval(progressInterval);

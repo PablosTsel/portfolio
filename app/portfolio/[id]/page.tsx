@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { use } from 'react';
-import { ref, getDownloadURL } from 'firebase/storage';
+import { ref, getDownloadURL, getBytes } from 'firebase/storage';
 import { storage } from '@/lib/firebase';
 
 export default function PortfolioPage({ params }: { params: Promise<{ id: string }> }) {
@@ -23,58 +23,54 @@ export default function PortfolioPage({ params }: { params: Promise<{ id: string
         try {
           // First check if the final version exists
           const finalRef = ref(storage, `portfolios/${id}/final.html`);
-          const finalUrl = await getDownloadURL(finalRef);
-          const finalResponse = await fetch(finalUrl);
+          const { getBytes } = await import('firebase/storage');
           
-          if (finalResponse.ok) {
-            const html = await finalResponse.text();
-            setPortfolioHtml(html);
+          try {
+            const finalBytes = await getBytes(finalRef);
+            const finalHtml = new TextDecoder().decode(finalBytes);
+            setPortfolioHtml(finalHtml);
             setExists(true);
             setLoading(false);
             return;
+          } catch (finalError) {
+            // Final version doesn't exist, try draft
           }
-        } catch (finalError) {
-          // Final version doesn't exist, try draft
-        }
 
-        try {
-          // Check if the draft version exists in Firebase Storage
-          const draftRef = ref(storage, `portfolios/${id}/index.html`);
-          const draftUrl = await getDownloadURL(draftRef);
-          const draftResponse = await fetch(draftUrl);
-          
-          if (draftResponse.ok) {
-            const html = await draftResponse.text();
-            setPortfolioHtml(html);
+          try {
+            // Check if the draft version exists in Firebase Storage
+            const draftRef = ref(storage, `portfolios/${id}/index.html`);
+            const draftBytes = await getBytes(draftRef);
+            const draftHtml = new TextDecoder().decode(draftBytes);
+            setPortfolioHtml(draftHtml);
             setExists(true);
             setLoading(false);
             return;
+          } catch (draftError) {
+            // Draft doesn't exist in Firebase Storage either
           }
-        } catch (draftError) {
-          // Draft doesn't exist in Firebase Storage either
-        }
-
-        // If Firebase Storage fails, try static files as fallback
-        try {
-          // First check if the final version exists as static file
-          let response = await fetch(`/portfolios/${id}/final.html`, { method: 'HEAD' });
-          
-          if (response.ok) {
-            // Redirect to the final HTML file
-            window.location.href = `/portfolios/${id}/final.html`;
-            return;
-          } else {
-            // Check if the draft version exists as static file
-            response = await fetch(`/portfolios/${id}/index.html`, { method: 'HEAD' });
+        } catch (storageError) {
+          // Firebase Storage fails, try static files as fallback
+          try {
+            // First check if the final version exists as static file
+            let response = await fetch(`/portfolios/${id}/final.html`, { method: 'HEAD' });
             
             if (response.ok) {
-              // Redirect to the draft HTML file
-              window.location.href = `/portfolios/${id}/index.html`;
+              // Redirect to the final HTML file
+              window.location.href = `/portfolios/${id}/final.html`;
               return;
+            } else {
+              // Check if the draft version exists as static file
+              response = await fetch(`/portfolios/${id}/index.html`, { method: 'HEAD' });
+              
+              if (response.ok) {
+                // Redirect to the draft HTML file
+                window.location.href = `/portfolios/${id}/index.html`;
+                return;
+              }
             }
+          } catch (staticError) {
+            console.error('Static file check failed:', staticError);
           }
-        } catch (staticError) {
-          console.error('Static file check failed:', staticError);
         }
 
         // Nothing found

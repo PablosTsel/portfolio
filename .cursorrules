@@ -70,3 +70,15 @@
 - Firebase Storage requires Blaze plan - check console if uploads fail
 - OpenAI API key must be set in .env.local for portfolio generation 
 - Firebase Admin SDK needs proper authentication setup with service account credentials for production use. For development, we can skip database saves initially. 
+
+## Deployment on Netlify
+- **CRITICAL**: Next.js API routes don't work with `output: 'export'` (static export)
+- Remove `output: 'export'` from next.config.mjs for API routes to work
+- Use publish directory: `.next` (not `out`)
+- **File System Issue**: Cannot write files to public directory on serverless platforms
+- Solution: Return HTML from API and save to Firebase Storage client-side
+- **Required Environment Variables**:
+  - `OPENAI_API_KEY` (must be actual key, not placeholder)
+  - All `NEXT_PUBLIC_FIREBASE_*` variables
+  - Firebase Admin variables (if using server-side Firebase)
+- **Firebase Auth**: Add Netlify domain to Firebase Console → Authentication → Settings → Authorized domains 

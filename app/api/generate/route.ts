@@ -14,6 +14,12 @@ export const runtime = 'nodejs';
 export async function POST(request: NextRequest) {
   try {
     console.log('Starting portfolio generation...');
+    console.log('Environment check:', {
+      hasOpenAIKey: !!process.env.OPENAI_API_KEY,
+      openAIKeyLength: process.env.OPENAI_API_KEY?.length || 0,
+      nodeEnv: process.env.NODE_ENV,
+      allEnvKeys: Object.keys(process.env).filter(key => key.includes('OPENAI') || key.includes('FIREBASE'))
+    });
     
     // Parse form data
     const formData = await request.formData();
@@ -36,6 +42,15 @@ export async function POST(request: NextRequest) {
       console.error('OpenAI API key not found in environment variables');
       return NextResponse.json(
         { error: 'Server configuration error - Missing API key' },
+        { status: 500 }
+      );
+    }
+
+    // Check if it's a placeholder
+    if (openaiApiKey === 'your_openai_api_key_here' || openaiApiKey.includes('your_')) {
+      console.error('OpenAI API key is still a placeholder!');
+      return NextResponse.json(
+        { error: 'Server configuration error - Invalid API key (placeholder detected)' },
         { status: 500 }
       );
     }
@@ -89,6 +104,8 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error('Detailed error in portfolio generation:', error);
     console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('Error type:', error?.constructor?.name);
+    console.error('Full error object:', JSON.stringify(error, null, 2));
     
     // Return more specific error message
     const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';

@@ -77,40 +77,13 @@ export async function POST(request: NextRequest) {
       githubProfile: undefined // User can add this later
     });
 
-    // Save portfolio data to Firestore
-    console.log('Skipping Firestore save for now - will add back later...');
-    // TODO: Set up proper Firebase Admin authentication
-    /*
-    await adminDb.collection('portfolios').doc(portfolioId).set({
-      userId,
-      name: portfolioContent.fullName,
-      email: portfolioContent.email,
-      template: 'template1',
-      data: portfolioContent,
-      cvUrl,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-      status: 'completed'
-    });
-    */
-
-    // Create the public portfolio directory
-    console.log('Creating portfolio directory...');
-    const publicDir = join(process.cwd(), 'public', 'portfolios', portfolioId);
-    
-    // Create directory if it doesn't exist
-    if (!existsSync(publicDir)) {
-      await mkdir(publicDir, { recursive: true });
-    }
-
-    // Write the HTML file
-    await writeFile(join(publicDir, 'index.html'), portfolioHTML);
-    console.log('Portfolio HTML file created');
-
+    // For production, we'll return the HTML and let the client save it
+    // This avoids file system issues on serverless platforms
     console.log('Portfolio generation completed successfully!');
     return NextResponse.json({ 
       success: true, 
       portfolioId,
+      portfolioHtml: portfolioHTML,
       portfolioUrl: `/portfolios/${portfolioId}`
     });
   } catch (error) {

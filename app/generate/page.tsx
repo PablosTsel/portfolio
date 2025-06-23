@@ -15,6 +15,8 @@ import {
   CheckCircle,
   XCircle
 } from 'lucide-react';
+import { ref, uploadString } from 'firebase/storage';
+import { storage } from '@/lib/firebase';
 
 export default function GeneratePage() {
   const { user } = useAuth();
@@ -84,6 +86,14 @@ export default function GeneratePage() {
       }
 
       const data = await response.json();
+      
+      // Save the portfolio HTML to Firebase Storage
+      if (data.portfolioHtml) {
+        const portfolioRef = ref(storage, `portfolios/${data.portfolioId}/index.html`);
+        await uploadString(portfolioRef, data.portfolioHtml, 'raw', {
+          contentType: 'text/html',
+        });
+      }
       
       clearInterval(progressInterval);
       setProgress(100);

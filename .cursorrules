@@ -1,0 +1,72 @@
+# Project Rules
+
+## Dependency Installation
+- Always use `npm install --legacy-peer-deps` when installing packages
+- This project has peer dependency conflicts (specifically with date-fns versions)
+- The --legacy-peer-deps flag resolves these without breaking functionality
+
+## Development Commands
+- Use `npm run dev` to start the development server
+- Project runs on http://localhost:3000
+
+## Firebase Configuration
+- Firebase project: "Portfolio" (portfolio-8aca6)
+- Services used: Authentication, Firestore, Storage
+- Configuration stored in `lib/firebase.ts`
+- Project ID: portfolio-8aca6
+- Storage bucket: portfolio-8aca6.firebasestorage.app
+
+## Architecture Decisions
+- Keep it simple: One template, AI-first approach
+- No dual directory structure - everything in correct place from start
+- Template as React component, not HTML files
+- Generated portfolios saved as static files in `/public/portfolios/[id]/`
+- Same behavior in localhost and production
+
+## AI Portfolio Generation
+- Uses 3-agent system: TextExtractor → InformationParser → ContentGenerator
+- API route at /api/generate handles CV processing
+- **Only supports Word documents (.docx)** - PDF support removed due to compatibility issues
+- Portfolios saved to /public/portfolios/[id]/index.html
+- OpenAI API key required in .env.local or environment variables
+
+## Firebase Storage Setup
+- Storage bucket must be initialized in Firebase Console before use
+- Project must be on Blaze plan for Firebase Storage
+- Storage bucket URL format: portfolio-8aca6.firebasestorage.app
+- If getting 404 errors, check that storage is enabled in console
+- CV files uploaded to: users/{userId}/portfolios/{portfolioId}/cv.{extension}
+- **IMPORTANT**: Update Firebase Storage rules to allow authenticated users to upload:
+  ```
+  rules_version = '2';
+  service firebase.storage {
+    match /b/{bucket}/o {
+      match /users/{userId}/portfolios/{portfolioId}/{allPaths=**} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+      match /portfolios/{portfolioId}/{allPaths=**} {
+        allow read: if true;
+      }
+    }
+  }
+  ```
+
+## Portfolio Editing System
+- After CV upload, users are redirected to `/portfolio/[id]/edit` to edit their portfolio
+- Text content is made editable using contenteditable attributes
+- Save button appears at top right of the portfolio (positioned at top: 80px to avoid covering dark/light mode toggle)
+- Initial portfolio saved as `index.html` (draft version)
+- Final edited portfolio saved as `final.html` (published version)
+- Portfolio viewer checks for `final.html` first, falls back to `index.html`
+- Profile picture upload: Click on profile images to upload new ones during editing
+- **IMPORTANT**: Use `.editing-mode` class for all editing-only styles (like "Change Photo" overlays) to prevent them from appearing in final saved portfolios
+- When saving, remove `editing-mode` class, onclick handlers, contenteditable attributes, AND completely remove all editing-specific CSS rules and scripts from the HTML
+- **CRITICAL**: Don't just remove classes - completely strip out editing CSS and JavaScript to ensure clean final portfolios
+- **CSS REMOVAL**: Only remove editing-specific CSS patterns - preserve base styles like `.project-image img` that maintain layout consistency
+
+## Common Issues
+- If you get ERESOLVE errors during npm install, use --legacy-peer-deps flag
+- Make sure all components are properly imported with correct paths (use @/ for root imports) 
+- Firebase Storage requires Blaze plan - check console if uploads fail
+- OpenAI API key must be set in .env.local for portfolio generation 
+- Firebase Admin SDK needs proper authentication setup with service account credentials for production use. For development, we can skip database saves initially. 

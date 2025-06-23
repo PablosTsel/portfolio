@@ -26,12 +26,18 @@ export default function PortfolioPage({ params }: { params: Promise<{ id: string
           const { getBytes } = await import('firebase/storage');
           
           try {
-            const finalBytes = await getBytes(finalRef);
-            const finalHtml = new TextDecoder().decode(finalBytes);
-            setPortfolioHtml(finalHtml);
-            setExists(true);
-            setLoading(false);
-            return;
+            const finalBytes = await Promise.race([
+              getBytes(finalRef),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+            ]);
+            
+            if (finalBytes instanceof Uint8Array) {
+              const finalHtml = new TextDecoder().decode(finalBytes);
+              setPortfolioHtml(finalHtml);
+              setExists(true);
+              setLoading(false);
+              return;
+            }
           } catch (finalError) {
             // Final version doesn't exist, try draft
           }
@@ -39,12 +45,18 @@ export default function PortfolioPage({ params }: { params: Promise<{ id: string
           try {
             // Check if the draft version exists in Firebase Storage
             const draftRef = ref(storage, `portfolios/${id}/index.html`);
-            const draftBytes = await getBytes(draftRef);
-            const draftHtml = new TextDecoder().decode(draftBytes);
-            setPortfolioHtml(draftHtml);
-            setExists(true);
-            setLoading(false);
-            return;
+            const draftBytes = await Promise.race([
+              getBytes(draftRef),
+              new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 5000))
+            ]);
+            
+            if (draftBytes instanceof Uint8Array) {
+              const draftHtml = new TextDecoder().decode(draftBytes);
+              setPortfolioHtml(draftHtml);
+              setExists(true);
+              setLoading(false);
+              return;
+            }
           } catch (draftError) {
             // Draft doesn't exist in Firebase Storage either
           }

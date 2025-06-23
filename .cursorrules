@@ -69,7 +69,9 @@
 - Make sure all components are properly imported with correct paths (use @/ for root imports) 
 - Firebase Storage requires Blaze plan - check console if uploads fail
 - OpenAI API key must be set in .env.local for portfolio generation 
-- Firebase Admin SDK needs proper authentication setup with service account credentials for production use. For development, we can skip database saves initially. 
+- Firebase Admin SDK needs proper authentication setup with service account credentials for production use. For development, we can skip database saves initially.
+- **Firebase Storage Infinite Retries**: Use timeouts with Promise.race() to prevent infinite retry loops when files don't exist
+- **CORS Issues**: Use Firebase SDK `getBytes()` instead of `fetch()` for Firebase Storage downloads
 
 ## Deployment on Netlify
 - **CRITICAL**: Next.js API routes don't work with `output: 'export'` (static export)

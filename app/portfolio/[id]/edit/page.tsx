@@ -25,342 +25,352 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
           
           // Use Firebase SDK to get the file directly instead of fetch
           const { getBytes } = await import('firebase/storage');
-          const bytes = await getBytes(portfolioRef);
-          const html = new TextDecoder().decode(bytes);
           
-          // Make text elements editable (but not section titles)
-          // First, make all text elements editable
-          let editableHtml = html.replace(/(<h1|<h2|<h3|<h4|<h5|<h6|<p|<span|<li|<td|<th)(\s|>)/g, 
-            '$1 contenteditable="true" style="outline: none; cursor: text;"$2');
+          // Add timeout to prevent infinite retries
+          const timeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Firebase Storage timeout')), 10000)
+          );
           
-          // Then make section titles non-editable (looking for common section title patterns)
-          editableHtml = editableHtml.replace(/contenteditable="true"([^>]*>)(About|Skills|Experience|Projects|Education|Contact|Portfolio|Services|Expertise|Work)/gi, 
-            '$1$2');
+          const bytesPromise = getBytes(portfolioRef);
+          const bytes = await Promise.race([bytesPromise, timeoutPromise]);
           
-          // Also remove contenteditable from navigation items and buttons
-          editableHtml = editableHtml.replace(/(<nav[^>]*>[\s\S]*?<\/nav>)/gi, (match) => {
-            return match.replace(/contenteditable="true" style="outline: none; cursor: text;"/g, '');
-          });
-          
-          // Remove contenteditable from links
-          editableHtml = editableHtml.replace(/(<a[^>]*)(contenteditable="true" style="outline: none; cursor: text;")([^>]*>)/g, '$1$3');
-          
-          // Make profile images clickable for upload
-          editableHtml = editableHtml.replace(/(<img[^>]*class="[^"]*profile[^"]*"[^>]*)(>)/gi, 
-            '$1 style="cursor: pointer;" onclick="window.uploadProfileImage(this)" title="Click to change profile picture"$2');
-          
-          // Also make hero avatar clickable for upload
-          editableHtml = editableHtml.replace(/(<div[^>]*class="[^"]*hero-avatar[^"]*"[^>]*)(>)/gi, 
-            '$1 style="cursor: pointer;" onclick="window.uploadProfileAvatar(this)" title="Click to add profile picture"$2');
-          
-          // Make project images clickable for upload
-          editableHtml = editableHtml.replace(/(<div[^>]*class="[^"]*project-image[^"]*"[^>]*>[\s\S]*?<img[^>]*)(>)/gi, (match, imgStart) => {
-            return match.replace(/<img([^>]*)>/gi, '<img$1 style="cursor: pointer;" onclick="window.uploadProjectImage(this)" title="Click to change project image">');
-          });
-          
-          // Add the save button CSS and profile upload styles
-          const saveButtonStyles = `
-            <style>
-              .save-portfolio-btn {
-                position: fixed;
-                top: 80px;
-                right: 20px;
-                z-index: 9999;
-                background: linear-gradient(to right, #3b82f6, #9333ea);
-                color: white;
-                padding: 12px 24px;
-                border-radius: 8px;
-                border: none;
-                font-weight: 600;
-                cursor: pointer;
-                display: flex;
-                align-items: center;
-                gap: 8px;
-                box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-                transition: all 0.2s;
-              }
-              .save-portfolio-btn:hover {
-                transform: translateY(-2px);
-                box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
-              }
-              .save-portfolio-btn:disabled {
-                opacity: 0.7;
-                cursor: not-allowed;
-              }
-              [contenteditable="true"]:hover {
-                background-color: rgba(59, 130, 246, 0.05);
-                border-radius: 4px;
-                transition: background-color 0.2s;
-              }
-              [contenteditable="true"]:focus {
-                background-color: rgba(59, 130, 246, 0.1);
-                border-radius: 4px;
-              }
-              
-              /* Profile image upload indicators - ONLY for editing mode */
-              .editing-mode .hero-avatar[onclick] {
-                position: relative;
-                border: 3px dashed rgba(59, 130, 246, 0.5);
-                transition: all 0.3s ease;
-              }
-              
-              .editing-mode .hero-avatar[onclick]:hover {
-                border-color: rgba(59, 130, 246, 0.8);
-                transform: scale(1.02);
-                box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-              }
-              
-              .editing-mode .hero-avatar[onclick]::after {
-                content: "\\1F4F7";
-                position: absolute;
-                bottom: 10%;
-                right: 10%;
-                background: #3b82f6;
-                color: white;
-                width: 40px;
-                height: 40px;
-                border-radius: 50%;
-                display: flex;
-                align-items: center;
-                justify-content: center;
-                font-size: 20px;
-                box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-                transition: all 0.3s ease;
-              }
-              
-              .editing-mode .hero-avatar[onclick]:hover::after {
-                transform: scale(1.1);
-                background: #2563eb;
-              }
-              
-              .editing-mode img[onclick].profile-image {
-                position: relative;
-                transition: all 0.3s ease;
-                border: 3px solid transparent;
-              }
-              
-              .editing-mode img[onclick].profile-image:hover {
-                transform: scale(1.02);
-                box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
-                border-color: rgba(59, 130, 246, 0.5);
-              }
-              
-              /* Add camera overlay on hover for existing images - ONLY for editing mode */
-              .editing-mode .hero-image {
-                position: relative;
-              }
-              
-              .editing-mode .hero-image::after {
-                content: "\\1F4F7 Change Photo";
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: rgba(0, 0, 0, 0.7);
-                color: white;
-                padding: 12px 20px;
-                border-radius: 8px;
-                font-size: 16px;
-                font-weight: 500;
-                opacity: 0;
-                transition: opacity 0.3s ease;
-                pointer-events: none;
-                white-space: nowrap;
-              }
-              
-              .editing-mode .hero-image:hover::after {
-                opacity: 1;
-              }
-              
-              /* Ensure the image container handles the hover properly - ONLY for editing mode */
-              .editing-mode .hero-image:has(img[onclick]) {
-                cursor: pointer;
-              }
-              
-              /* Project image upload indicators - ONLY for editing mode */
-              .editing-mode .project-image {
-                position: relative;
-                overflow: hidden;
-              }
-              
-              .editing-mode .project-image img[onclick] {
-                transition: all 0.3s ease;
-              }
-              
-              .editing-mode .project-image:hover img[onclick] {
-                transform: scale(1.05);
-                filter: brightness(0.8);
-              }
-              
-              .editing-mode .project-image::after {
-                content: "\\1F4F7 Change Image";
-                position: absolute;
-                top: 50%;
-                left: 50%;
-                transform: translate(-50%, -50%);
-                background: rgba(0, 0, 0, 0.7);
-                color: white;
-                padding: 10px 20px;
-                border-radius: 6px;
-                font-size: 14px;
-                font-weight: 500;
-                opacity: 0;
-                transition: opacity 0.3s ease;
-                pointer-events: none;
-                white-space: nowrap;
-                z-index: 10;
-              }
-              
-              .editing-mode .project-image:hover::after {
-                opacity: 1;
-              }
-              
-              .upload-overlay {
-                position: fixed;
-                top: 0;
-                left: 0;
-                right: 0;
-                bottom: 0;
-                background: rgba(0, 0, 0, 0.5);
-                display: none;
-                justify-content: center;
-                align-items: center;
-                z-index: 10000;
-              }
-              .upload-modal {
-                background: white;
-                padding: 24px;
-                border-radius: 12px;
-                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
-                max-width: 400px;
-                width: 90%;
-              }
-              .upload-modal h3 {
-                margin: 0 0 16px 0;
-                color: #1f2937;
-              }
-              .upload-modal input[type="file"] {
-                width: 100%;
-                padding: 8px;
-                border: 2px dashed #cbd5e1;
-                border-radius: 8px;
-                margin-bottom: 16px;
-              }
-              .upload-modal button {
-                padding: 8px 16px;
-                margin-right: 8px;
-                border-radius: 6px;
-                border: none;
-                cursor: pointer;
-                font-weight: 500;
-              }
-              .upload-modal button.primary {
-                background: #3b82f6;
-                color: white;
-              }
-              .upload-modal button.secondary {
-                background: #e5e7eb;
-                color: #374151;
-              }
-            </style>
-          `;
-          
-          // Add save button and inject styles
-          const saveButton = `
-            <button id="save-portfolio" class="save-portfolio-btn">
-              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path>
-                <polyline points="17 21 17 13 7 13 7 21"></polyline>
-                <polyline points="7 3 7 8 15 8"></polyline>
-              </svg>
-              Save Portfolio
-            </button>
-          `;
-          
-          // Add profile upload script
-          const uploadScript = `
-            <script>
-              let currentImageElement = null;
-              
-              // Add editing-mode class to body for styling
-              document.body.classList.add('editing-mode');
-              
-              window.uploadProfileImage = function(imgElement) {
-                currentImageElement = imgElement;
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = 'image/*';
-                input.onchange = function(e) {
-                  const file = e.target.files[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                      currentImageElement.src = e.target.result;
-                      // Store the image data for saving later
-                      currentImageElement.setAttribute('data-new-image', e.target.result);
-                    };
-                    reader.readAsDataURL(file);
-                  }
+          if (bytes instanceof Uint8Array) {
+            const html = new TextDecoder().decode(bytes);
+            
+            // Make text elements editable (but not section titles)
+            // First, make all text elements editable
+            let editableHtml = html.replace(/(<h1|<h2|<h3|<h4|<h5|<h6|<p|<span|<li|<td|<th)(\s|>)/g, 
+              '$1 contenteditable="true" style="outline: none; cursor: text;"$2');
+            
+            // Then make section titles non-editable (looking for common section title patterns)
+            editableHtml = editableHtml.replace(/contenteditable="true"([^>]*>)(About|Skills|Experience|Projects|Education|Contact|Portfolio|Services|Expertise|Work)/gi, 
+              '$1$2');
+            
+            // Also remove contenteditable from navigation items and buttons
+            editableHtml = editableHtml.replace(/(<nav[^>]*>[\s\S]*?<\/nav>)/gi, (match) => {
+              return match.replace(/contenteditable="true" style="outline: none; cursor: text;"/g, '');
+            });
+            
+            // Remove contenteditable from links
+            editableHtml = editableHtml.replace(/(<a[^>]*)(contenteditable="true" style="outline: none; cursor: text;")([^>]*>)/g, '$1$3');
+            
+            // Make profile images clickable for upload
+            editableHtml = editableHtml.replace(/(<img[^>]*class="[^"]*profile[^"]*"[^>]*)(>)/gi, 
+              '$1 style="cursor: pointer;" onclick="window.uploadProfileImage(this)" title="Click to change profile picture"$2');
+            
+            // Also make hero avatar clickable for upload
+            editableHtml = editableHtml.replace(/(<div[^>]*class="[^"]*hero-avatar[^"]*"[^>]*)(>)/gi, 
+              '$1 style="cursor: pointer;" onclick="window.uploadProfileAvatar(this)" title="Click to add profile picture"$2');
+            
+            // Make project images clickable for upload
+            editableHtml = editableHtml.replace(/(<div[^>]*class="[^"]*project-image[^"]*"[^>]*>[\s\S]*?<img[^>]*)(>)/gi, (match, imgStart) => {
+              return match.replace(/<img([^>]*)>/gi, '<img$1 style="cursor: pointer;" onclick="window.uploadProjectImage(this)" title="Click to change project image">');
+            });
+            
+            // Add the save button CSS and profile upload styles
+            const saveButtonStyles = `
+              <style>
+                .save-portfolio-btn {
+                  position: fixed;
+                  top: 80px;
+                  right: 20px;
+                  z-index: 9999;
+                  background: linear-gradient(to right, #3b82f6, #9333ea);
+                  color: white;
+                  padding: 12px 24px;
+                  border-radius: 8px;
+                  border: none;
+                  font-weight: 600;
+                  cursor: pointer;
+                  display: flex;
+                  align-items: center;
+                  gap: 8px;
+                  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+                  transition: all 0.2s;
+                }
+                .save-portfolio-btn:hover {
+                  transform: translateY(-2px);
+                  box-shadow: 0 6px 8px rgba(0, 0, 0, 0.15);
+                }
+                .save-portfolio-btn:disabled {
+                  opacity: 0.7;
+                  cursor: not-allowed;
+                }
+                [contenteditable="true"]:hover {
+                  background-color: rgba(59, 130, 246, 0.05);
+                  border-radius: 4px;
+                  transition: background-color 0.2s;
+                }
+                [contenteditable="true"]:focus {
+                  background-color: rgba(59, 130, 246, 0.1);
+                  border-radius: 4px;
+                }
+                
+                /* Profile image upload indicators - ONLY for editing mode */
+                .editing-mode .hero-avatar[onclick] {
+                  position: relative;
+                  border: 3px dashed rgba(59, 130, 246, 0.5);
+                  transition: all 0.3s ease;
+                }
+                
+                .editing-mode .hero-avatar[onclick]:hover {
+                  border-color: rgba(59, 130, 246, 0.8);
+                  transform: scale(1.02);
+                  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+                }
+                
+                .editing-mode .hero-avatar[onclick]::after {
+                  content: "\\1F4F7";
+                  position: absolute;
+                  bottom: 10%;
+                  right: 10%;
+                  background: #3b82f6;
+                  color: white;
+                  width: 40px;
+                  height: 40px;
+                  border-radius: 50%;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  font-size: 20px;
+                  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+                  transition: all 0.3s ease;
+                }
+                
+                .editing-mode .hero-avatar[onclick]:hover::after {
+                  transform: scale(1.1);
+                  background: #2563eb;
+                }
+                
+                .editing-mode img[onclick].profile-image {
+                  position: relative;
+                  transition: all 0.3s ease;
+                  border: 3px solid transparent;
+                }
+                
+                .editing-mode img[onclick].profile-image:hover {
+                  transform: scale(1.02);
+                  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3);
+                  border-color: rgba(59, 130, 246, 0.5);
+                }
+                
+                /* Add camera overlay on hover for existing images - ONLY for editing mode */
+                .editing-mode .hero-image {
+                  position: relative;
+                }
+                
+                .editing-mode .hero-image::after {
+                  content: "\\1F4F7 Change Photo";
+                  position: absolute;
+                  top: 50%;
+                  left: 50%;
+                  transform: translate(-50%, -50%);
+                  background: rgba(0, 0, 0, 0.7);
+                  color: white;
+                  padding: 12px 20px;
+                  border-radius: 8px;
+                  font-size: 16px;
+                  font-weight: 500;
+                  opacity: 0;
+                  transition: opacity 0.3s ease;
+                  pointer-events: none;
+                  white-space: nowrap;
+                }
+                
+                .editing-mode .hero-image:hover::after {
+                  opacity: 1;
+                }
+                
+                /* Ensure the image container handles the hover properly - ONLY for editing mode */
+                .editing-mode .hero-image:has(img[onclick]) {
+                  cursor: pointer;
+                }
+                
+                /* Project image upload indicators - ONLY for editing mode */
+                .editing-mode .project-image {
+                  position: relative;
+                  overflow: hidden;
+                }
+                
+                .editing-mode .project-image img[onclick] {
+                  transition: all 0.3s ease;
+                }
+                
+                .editing-mode .project-image:hover img[onclick] {
+                  transform: scale(1.05);
+                  filter: brightness(0.8);
+                }
+                
+                .editing-mode .project-image::after {
+                  content: "\\1F4F7 Change Image";
+                  position: absolute;
+                  top: 50%;
+                  left: 50%;
+                  transform: translate(-50%, -50%);
+                  background: rgba(0, 0, 0, 0.7);
+                  color: white;
+                  padding: 10px 20px;
+                  border-radius: 6px;
+                  font-size: 14px;
+                  font-weight: 500;
+                  opacity: 0;
+                  transition: opacity 0.3s ease;
+                  pointer-events: none;
+                  white-space: nowrap;
+                  z-index: 10;
+                }
+                
+                .editing-mode .project-image:hover::after {
+                  opacity: 1;
+                }
+                
+                .upload-overlay {
+                  position: fixed;
+                  top: 0;
+                  left: 0;
+                  right: 0;
+                  bottom: 0;
+                  background: rgba(0, 0, 0, 0.5);
+                  display: none;
+                  justify-content: center;
+                  align-items: center;
+                  z-index: 10000;
+                }
+                .upload-modal {
+                  background: white;
+                  padding: 24px;
+                  border-radius: 12px;
+                  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+                  max-width: 400px;
+                  width: 90%;
+                }
+                .upload-modal h3 {
+                  margin: 0 0 16px 0;
+                  color: #1f2937;
+                }
+                .upload-modal input[type="file"] {
+                  width: 100%;
+                  padding: 8px;
+                  border: 2px dashed #cbd5e1;
+                  border-radius: 8px;
+                  margin-bottom: 16px;
+                }
+                .upload-modal button {
+                  padding: 8px 16px;
+                  margin-right: 8px;
+                  border-radius: 6px;
+                  border: none;
+                  cursor: pointer;
+                  font-weight: 500;
+                }
+                .upload-modal button.primary {
+                  background: #3b82f6;
+                  color: white;
+                }
+                .upload-modal button.secondary {
+                  background: #e5e7eb;
+                  color: #374151;
+                }
+              </style>
+            `;
+            
+            // Add save button and inject styles
+            const saveButton = `
+              <button id="save-portfolio" class="save-portfolio-btn">
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                  <path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"></path>
+                  <polyline points="17 21 17 13 7 13 7 21"></polyline>
+                  <polyline points="7 3 7 8 15 8"></polyline>
+                </svg>
+                Save Portfolio
+              </button>
+            `;
+            
+            // Add profile upload script
+            const uploadScript = `
+              <script>
+                let currentImageElement = null;
+                
+                // Add editing-mode class to body for styling
+                document.body.classList.add('editing-mode');
+                
+                window.uploadProfileImage = function(imgElement) {
+                  currentImageElement = imgElement;
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = 'image/*';
+                  input.onchange = function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = function(e) {
+                        currentImageElement.src = e.target.result;
+                        // Store the image data for saving later
+                        currentImageElement.setAttribute('data-new-image', e.target.result);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  };
+                  input.click();
                 };
-                input.click();
-              };
-              
-              window.uploadProfileAvatar = function(avatarDiv) {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = 'image/*';
-                input.onchange = function(e) {
-                  const file = e.target.files[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                      // Create an img element to replace the avatar div
-                      const img = document.createElement('img');
-                      img.src = e.target.result;
-                      img.alt = 'Profile';
-                      img.className = 'profile-image';
-                      img.style.cursor = 'pointer';
-                      img.onclick = function() { window.uploadProfileImage(img); };
-                      img.title = 'Click to change profile picture';
-                      img.setAttribute('data-new-image', e.target.result);
-                      
-                      // Replace the avatar div with the image
-                      avatarDiv.parentNode.replaceChild(img, avatarDiv);
-                    };
-                    reader.readAsDataURL(file);
-                  }
+                
+                window.uploadProfileAvatar = function(avatarDiv) {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = 'image/*';
+                  input.onchange = function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = function(e) {
+                        // Create an img element to replace the avatar div
+                        const img = document.createElement('img');
+                        img.src = e.target.result;
+                        img.alt = 'Profile';
+                        img.className = 'profile-image';
+                        img.style.cursor = 'pointer';
+                        img.onclick = function() { window.uploadProfileImage(img); };
+                        img.title = 'Click to change profile picture';
+                        img.setAttribute('data-new-image', e.target.result);
+                        
+                        // Replace the avatar div with the image
+                        avatarDiv.parentNode.replaceChild(img, avatarDiv);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  };
+                  input.click();
                 };
-                input.click();
-              };
-              
-              window.uploadProjectImage = function(imgElement) {
-                const input = document.createElement('input');
-                input.type = 'file';
-                input.accept = 'image/*';
-                input.onchange = function(e) {
-                  const file = e.target.files[0];
-                  if (file) {
-                    const reader = new FileReader();
-                    reader.onload = function(e) {
-                      imgElement.src = e.target.result;
-                      // Store the image data for saving later
-                      imgElement.setAttribute('data-new-image', e.target.result);
-                    };
-                    reader.readAsDataURL(file);
-                  }
+                
+                window.uploadProjectImage = function(imgElement) {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = 'image/*';
+                  input.onchange = function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                      const reader = new FileReader();
+                      reader.onload = function(e) {
+                        imgElement.src = e.target.result;
+                        // Store the image data for saving later
+                        imgElement.setAttribute('data-new-image', e.target.result);
+                      };
+                      reader.readAsDataURL(file);
+                    }
+                  };
+                  input.click();
                 };
-                input.click();
-              };
-            </script>
-          `;
-          
-          // Inject styles, button, and script before closing body tag
-          editableHtml = editableHtml.replace('</head>', saveButtonStyles + '</head>');
-          editableHtml = editableHtml.replace('</body>', saveButton + uploadScript + '</body>');
-          
-          setPortfolioHtml(editableHtml);
-          setLoading(false);
-          return;
+              </script>
+            `;
+            
+            // Inject styles, button, and script before closing body tag
+            editableHtml = editableHtml.replace('</head>', saveButtonStyles + '</head>');
+            editableHtml = editableHtml.replace('</body>', saveButton + uploadScript + '</body>');
+            
+            setPortfolioHtml(editableHtml);
+            setLoading(false);
+            return;
+          }
         } catch (firebaseError) {
           console.log('Firebase Storage load failed, trying static files:', firebaseError);
         }

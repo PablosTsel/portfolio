@@ -1,6 +1,4 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { writeFile } from 'fs/promises';
-import { join } from 'path';
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,23 +11,18 @@ export async function POST(request: NextRequest) {
       );
     }
     
-    // Save the final portfolio to a new file
-    const publicDir = join(process.cwd(), 'public', 'portfolios', portfolioId);
-    const finalPath = join(publicDir, 'final.html');
-    
-    // Write the final HTML file
-    await writeFile(finalPath, html);
-    
-    console.log(`Final portfolio saved for ${portfolioId}`);
-    
+    // Return the HTML to the client so it can save to Firebase Storage
+    // This avoids file system issues on serverless platforms
     return NextResponse.json({ 
       success: true,
-      message: 'Portfolio saved successfully'
+      portfolioId,
+      html,
+      message: 'Portfolio prepared for saving'
     });
   } catch (error) {
-    console.error('Error saving portfolio:', error);
+    console.error('Error preparing portfolio for save:', error);
     return NextResponse.json(
-      { error: 'Failed to save portfolio' },
+      { error: 'Failed to prepare portfolio for saving' },
       { status: 500 }
     );
   }

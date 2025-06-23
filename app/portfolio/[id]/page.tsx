@@ -4,46 +4,90 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2 } from 'lucide-react';
 import { use } from 'react';
+import { ref, getDownloadURL } from 'firebase/storage';
+import { storage } from '@/lib/firebase';
 
 export default function PortfolioPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
+  const [portfolioHtml, setPortfolioHtml] = useState('');
   const [exists, setExists] = useState(false);
   
   // Unwrap the params promise
   const { id } = use(params);
 
   useEffect(() => {
-    const checkPortfolio = async () => {
+    const loadPortfolio = async () => {
       try {
-        // First check if the final version exists
-        let response = await fetch(`/portfolios/${id}/final.html`, { method: 'HEAD' });
-        
-        if (response.ok) {
-          setExists(true);
-          // Redirect to the final HTML file
-          window.location.href = `/portfolios/${id}/final.html`;
-        } else {
-          // Check if the draft version exists
-          response = await fetch(`/portfolios/${id}/index.html`, { method: 'HEAD' });
+        // Try to load from Firebase Storage first
+        try {
+          // First check if the final version exists
+          const finalRef = ref(storage, `portfolios/${id}/final.html`);
+          const finalUrl = await getDownloadURL(finalRef);
+          const finalResponse = await fetch(finalUrl);
+          
+          if (finalResponse.ok) {
+            const html = await finalResponse.text();
+            setPortfolioHtml(html);
+            setExists(true);
+            setLoading(false);
+            return;
+          }
+        } catch (finalError) {
+          // Final version doesn't exist, try draft
+        }
+
+        try {
+          // Check if the draft version exists in Firebase Storage
+          const draftRef = ref(storage, `portfolios/${id}/index.html`);
+          const draftUrl = await getDownloadURL(draftRef);
+          const draftResponse = await fetch(draftUrl);
+          
+          if (draftResponse.ok) {
+            const html = await draftResponse.text();
+            setPortfolioHtml(html);
+            setExists(true);
+            setLoading(false);
+            return;
+          }
+        } catch (draftError) {
+          // Draft doesn't exist in Firebase Storage either
+        }
+
+        // If Firebase Storage fails, try static files as fallback
+        try {
+          // First check if the final version exists as static file
+          let response = await fetch(`/portfolios/${id}/final.html`, { method: 'HEAD' });
           
           if (response.ok) {
-            setExists(true);
-            // Redirect to the draft HTML file
-            window.location.href = `/portfolios/${id}/index.html`;
+            // Redirect to the final HTML file
+            window.location.href = `/portfolios/${id}/final.html`;
+            return;
           } else {
-            setExists(false);
-            setLoading(false);
+            // Check if the draft version exists as static file
+            response = await fetch(`/portfolios/${id}/index.html`, { method: 'HEAD' });
+            
+            if (response.ok) {
+              // Redirect to the draft HTML file
+              window.location.href = `/portfolios/${id}/index.html`;
+              return;
+            }
           }
+        } catch (staticError) {
+          console.error('Static file check failed:', staticError);
         }
+
+        // Nothing found
+        setExists(false);
+        setLoading(false);
       } catch (error) {
-        console.error('Error checking portfolio:', error);
+        console.error('Error loading portfolio:', error);
         setExists(false);
         setLoading(false);
       }
     };
 
-    checkPortfolio();
+    loadPortfolio();
   }, [id]);
 
   if (loading) {
@@ -77,6 +121,24 @@ export default function PortfolioPage({ params }: { params: Promise<{ id: string
           </button>
         </div>
       </div>
+    );
+  }
+
+  // If we have HTML content, render it in an iframe
+  if (portfolioHtml) {
+    return (
+      <iframe
+        srcDoc={portfolioHtml}
+        style={{
+          width: '100vw',
+          height: '100vh',
+          border: 'none',
+          margin: 0,
+          padding: 0,
+          display: 'block'
+        }}
+        title="Portfolio"
+      />
     );
   }
 

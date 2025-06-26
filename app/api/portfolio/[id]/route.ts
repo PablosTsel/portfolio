@@ -20,7 +20,10 @@ export async function GET(
       return new NextResponse(html, {
         headers: {
           'Content-Type': 'text/html',
-          'Cache-Control': 'public, max-age=3600',
+          // Don't cache or use very short cache to avoid stale content
+          'Cache-Control': 'no-cache, no-store, must-revalidate',
+          'Pragma': 'no-cache',
+          'Expires': '0',
         },
       });
     } catch (error) {
@@ -36,7 +39,9 @@ export async function GET(
           return new NextResponse(indexHtml, {
             headers: {
               'Content-Type': 'text/html',
-              'Cache-Control': 'public, max-age=3600',
+              'Cache-Control': 'no-cache, no-store, must-revalidate',
+              'Pragma': 'no-cache',
+              'Expires': '0',
             },
           });
         } catch (indexError) {

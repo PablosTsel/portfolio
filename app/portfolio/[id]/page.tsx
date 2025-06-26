@@ -19,10 +19,16 @@ export default function PortfolioPage({ params }: { params: Promise<{ id: string
   useEffect(() => {
     const loadPortfolio = async () => {
       try {
+        // Get timestamp from URL to force fresh load
+        const urlParams = new URLSearchParams(window.location.search);
+        const timestamp = urlParams.get('t') || Date.now();
+        
         // Try to load from our API endpoint which handles Firebase Storage internally
         try {
-          // First try the final version
-          const finalResponse = await fetch(`/api/portfolio/${id}?version=final`);
+          // First try the final version with timestamp to bypass cache
+          const finalResponse = await fetch(`/api/portfolio/${id}?version=final&t=${timestamp}`, {
+            cache: 'no-store'
+          });
           if (finalResponse.ok) {
             const finalHtml = await finalResponse.text();
             setPortfolioHtml(finalHtml);
@@ -35,8 +41,10 @@ export default function PortfolioPage({ params }: { params: Promise<{ id: string
         }
 
         try {
-          // Try the draft version
-          const draftResponse = await fetch(`/api/portfolio/${id}?version=index`);
+          // Try the draft version with timestamp
+          const draftResponse = await fetch(`/api/portfolio/${id}?version=index&t=${timestamp}`, {
+            cache: 'no-store'
+          });
           if (draftResponse.ok) {
             const draftHtml = await draftResponse.text();
             setPortfolioHtml(draftHtml);

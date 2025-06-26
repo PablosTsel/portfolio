@@ -445,19 +445,36 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
         const finalHtml = iframeDoc.documentElement.outerHTML;
         
         // Save directly to Firebase Storage
-        const { ref, uploadString } = await import('firebase/storage');
+        const { ref, uploadString, getDownloadURL } = await import('firebase/storage');
         const { storage } = await import('@/lib/firebase');
         
         const finalRef = ref(storage, `portfolios/${id}/final.html`);
+        
+        // Upload the file
         await uploadString(finalRef, finalHtml, 'raw', {
           contentType: 'text/html',
         });
         
-        // Redirect to the portfolio
-        router.push(`/portfolio/${id}`);
+        // Verify the upload by getting the download URL
+        // This ensures the file is actually available before redirecting
+        try {
+          await getDownloadURL(finalRef);
+          console.log('Portfolio saved and verified successfully');
+        } catch (verifyError) {
+          console.error('Error verifying portfolio upload:', verifyError);
+          // Still continue with redirect even if verification fails
+        }
+        
+        // Add a small delay to ensure propagation
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Redirect to the portfolio with a cache-busting parameter
+        const timestamp = Date.now();
+        router.push(`/portfolio/${id}?t=${timestamp}`);
       }
     } catch (error) {
       console.error('Error saving portfolio:', error);
+      alert('Failed to save portfolio. Please try again.');
     } finally {
       setSaving(false);
     }

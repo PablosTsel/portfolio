@@ -142,14 +142,14 @@ export default function LandingPage() {
                       disabled={loading}
                     >
                       {loading ? 'Loading...' : 'Sign In'}
-                    </Button>
+                </Button>
                     <Button 
                       className="bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
                       onClick={handleSignIn}
                       disabled={loading}
                     >
                       {loading ? 'Loading...' : 'Get Started'}
-                    </Button>
+                </Button>
                   </>
                 )}
               </div>
@@ -221,14 +221,14 @@ export default function LandingPage() {
                         disabled={loading}
                       >
                         {loading ? 'Loading...' : 'Sign In'}
-                      </Button>
+                  </Button>
                       <Button 
                         className="justify-start bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white"
                         onClick={handleSignIn}
                         disabled={loading}
                       >
                         {loading ? 'Loading...' : 'Get Started'}
-                      </Button>
+                  </Button>
                     </>
                   )}
                 </div>

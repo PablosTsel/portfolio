@@ -60,11 +60,23 @@ Extract and return in JSON format:
   }]
 }
 
-Important:
-- Only include technical/professional skills, not languages or soft skills
-- Clean up job titles (remove "Intern" suffix)
-- Extract actual projects if mentioned, not just work experience
-- Keep descriptions concise`;
+CRITICAL RULES:
+1. Skills Filtering:
+   - Include ONLY technical skills (programming languages, frameworks, tools, technologies)
+   - EXCLUDE all spoken languages (English, Spanish, French, German, Italian, Portuguese, Chinese, Japanese, Korean, Arabic, Hindi, Greek, Russian, Dutch, Swedish, Polish, Turkish, Hebrew, etc.)
+   - EXCLUDE soft skills (leadership, communication, teamwork, etc.)
+
+2. Title Cleaning:
+   - Remove "Intern" from any job titles automatically
+   - Use core title only (e.g., "Software Developer" instead of "Software Developer Intern")
+   - For the main title field, use their current/most recent position without "Intern"
+
+3. Projects:
+   - Extract actual projects if mentioned in the CV
+   - Do NOT confuse work experience with projects
+   - Projects should be things they built, not companies they worked at
+
+Keep all extracted information accurate to the CV content.`;
 
     try {
       const response = await this.openai.chat.completions.create({
@@ -72,14 +84,14 @@ Important:
         messages: [
           {
             role: 'system',
-            content: 'You are a CV parser. Extract information and return only valid JSON.'
+            content: 'You are a CV parser. Extract information and return only valid JSON. Follow the filtering rules strictly.'
           },
           {
             role: 'user',
             content: prompt
           }
         ],
-        temperature: 0.3,
+        temperature: 0.1,
         max_tokens: 2000
       });
 

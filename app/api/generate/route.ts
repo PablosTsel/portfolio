@@ -10,7 +10,7 @@ import { join } from 'path';
 import { existsSync } from 'fs';
 
 export const runtime = 'nodejs';
-export const maxDuration = 10; // Set max duration for Netlify
+export const maxDuration = 60; // Increase to 60 seconds for Netlify
 
 export async function POST(request: NextRequest) {
   try {
@@ -69,23 +69,23 @@ export async function POST(request: NextRequest) {
       console.log('Step 2: Parsing CV information with AI...');
       const informationParser = new InformationParserAgent(openaiApiKey);
       
-      // Add timeout wrapper
+      // Add timeout wrapper - increased to 25 seconds
       const parsePromise = informationParser.parseCV(cvText);
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('OpenAI API timeout')), 8000) // 8 seconds to leave buffer
+        setTimeout(() => reject(new Error('OpenAI API timeout - parsing stage')), 25000)
       );
       
       const parsedCV = await Promise.race([parsePromise, timeoutPromise]) as any;
       console.log('CV parsed successfully:', parsedCV.fullName);
 
-      // Step 3: Generate engaging content (can be slow)
-      console.log('Step 3: Generating portfolio content...');
+      // Step 3: Generate engaging content (can be slow with GPT-4)
+      console.log('Step 3: Generating portfolio content with GPT-4...');
       const contentGenerator = new ContentGeneratorAgent(openaiApiKey);
       
-      // Add timeout wrapper for content generation too
+      // Add timeout wrapper for content generation - increased to 30 seconds for GPT-4
       const contentPromise = contentGenerator.generateContent(parsedCV);
       const contentTimeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Content generation timeout')), 8000)
+        setTimeout(() => reject(new Error('Content generation timeout - GPT-4 is taking too long')), 30000)
       );
       
       const portfolioContent = await Promise.race([contentPromise, contentTimeoutPromise]) as any;
@@ -95,18 +95,25 @@ export async function POST(request: NextRequest) {
       const portfolioId = randomUUID();
       console.log('Portfolio ID:', portfolioId);
 
-      // Skip Firebase Storage upload for now - will be handled client-side
-      console.log('Skipping CV upload to Firebase Storage (will be handled client-side)...');
-      const cvUrl = ''; // Will be updated later when client uploads
+      // Don't upload CV from server - let client handle it with proper auth
+      console.log('CV upload will be handled by client with proper authentication...');
+      
+      // Get file extension for client upload
+      const fileExtension = file.name.split('.').pop() || 'docx';
+      const cvPath = `users/${userId}/portfolios/${portfolioId}/cv.${fileExtension}`;
 
-      // Generate the portfolio HTML
+      // Generate the portfolio HTML with placeholder CV URL
       console.log('Generating portfolio HTML...');
       const portfolioHTML = generatePortfolioHTML({
         data: portfolioContent,
-        cvUrl,
+        cvUrl: '', // Will be set by client after CV upload
         profilePictureUrl: undefined, // User can add this later
         githubProfile: undefined // User can add this later
       });
+
+      // Convert file to base64 for client upload
+      const fileBuffer = await file.arrayBuffer();
+      const fileBase64 = Buffer.from(fileBuffer).toString('base64');
 
       // For production, we'll return the HTML and let the client save it
       // This avoids file system issues on serverless platforms
@@ -115,12 +122,23 @@ export async function POST(request: NextRequest) {
         success: true, 
         portfolioId,
         portfolioHtml: portfolioHTML,
-        portfolioUrl: `/portfolios/${portfolioId}`
+        portfolioUrl: `/portfolios/${portfolioId}`,
+        // Include CV data for client-side upload
+        cvData: {
+          fileName: file.name,
+          fileType: file.type,
+          fileBase64: fileBase64,
+          storagePath: cvPath
+        }
       });
     } catch (timeoutError) {
       console.error('Operation timed out:', timeoutError);
+      
+      // Provide more specific error messages based on which step timed out
+      const errorMessage = timeoutError instanceof Error ? timeoutError.message : 'Request timed out';
+      
       return NextResponse.json(
-        { error: 'Request timed out - OpenAI API is taking too long. Please try again.' },
+        { error: errorMessage },
         { status: 504 }
       );
     }

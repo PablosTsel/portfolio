@@ -15,7 +15,7 @@ import {
   CheckCircle,
   XCircle
 } from 'lucide-react';
-import { ref, uploadString } from 'firebase/storage';
+import { ref, uploadString, uploadBytes, getDownloadURL } from 'firebase/storage';
 import { storage, db } from '@/lib/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
@@ -93,10 +93,61 @@ export default function GeneratePage() {
         throw new Error(data.error || 'Failed to generate portfolio');
       }
       
+      // Upload the CV file to Firebase Storage if provided
+      let finalPortfolioHtml = data.portfolioHtml;
+      if (data.cvData) {
+        try {
+          console.log('Uploading CV to Firebase Storage...');
+          
+          // Convert base64 back to bytes
+          const cvBytes = Uint8Array.from(atob(data.cvData.fileBase64), c => c.charCodeAt(0));
+          
+          // Upload to Firebase Storage
+          const cvRef = ref(storage, data.cvData.storagePath);
+          await uploadBytes(cvRef, cvBytes, {
+            contentType: data.cvData.fileType,
+          });
+          
+          // Get download URL
+          const cvUrl = await getDownloadURL(cvRef);
+          console.log('CV uploaded successfully, URL:', cvUrl);
+          
+          // Update the portfolio HTML to include the CV download URL
+          // Replace the empty cvUrl with the actual URL
+          finalPortfolioHtml = data.portfolioHtml.replace(
+            'cvUrl: \'\'', 
+            `cvUrl: '${cvUrl}'`
+          ).replace(
+            'cvUrl,', 
+            `cvUrl: '${cvUrl}',`
+          );
+          
+          // More reliable replacement - look for the hero-buttons section and add the download button
+          if (!finalPortfolioHtml.includes('Download CV')) {
+            finalPortfolioHtml = finalPortfolioHtml.replace(
+              /<div class="hero-buttons">\s*<a href="#contact" class="btn primary-btn">\s*Contact\s*<\/a>\s*<\/div>/,
+              `<div class="hero-buttons">
+                    <a href="#contact" class="btn primary-btn">
+                        Contact
+                    </a>
+                    <a href="${cvUrl}" target="_blank" class="btn secondary-btn">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                        Download CV
+                    </a>
+                </div>`
+            );
+          }
+          
+        } catch (cvError) {
+          console.error('Error uploading CV:', cvError);
+          // Continue without CV download - don't fail the whole process
+        }
+      }
+      
       // Save the portfolio HTML to Firebase Storage
-      if (data.portfolioHtml) {
+      if (finalPortfolioHtml) {
         const portfolioRef = ref(storage, `portfolios/${data.portfolioId}/index.html`);
-        await uploadString(portfolioRef, data.portfolioHtml, 'raw', {
+        await uploadString(portfolioRef, finalPortfolioHtml, 'raw', {
           contentType: 'text/html',
         });
         

@@ -1,0 +1,19 @@
+[build]
+  command = "npm run build"
+  publish = ".next"
+
+[functions]
+  # Set timeout for all functions to 60 seconds (max allowed on free tier is 10s, pro is 26s)
+  # For Netlify Pro/Business, you can increase this
+  included_files = ["**"]
+  
+[[plugins]]
+  package = "@netlify/plugin-nextjs"
+
+# Headers for better caching and CORS
+[[headers]]
+  for = "/api/*"
+  [headers.values]
+    Access-Control-Allow-Origin = "*"
+    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
+    Access-Control-Allow-Headers = "Content-Type" 

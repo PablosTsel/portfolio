@@ -16,7 +16,8 @@ import {
   XCircle
 } from 'lucide-react';
 import { ref, uploadString } from 'firebase/storage';
-import { storage } from '@/lib/firebase';
+import { storage, db } from '@/lib/firebase';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 
 export default function GeneratePage() {
   const { user } = useAuth();
@@ -100,6 +101,21 @@ export default function GeneratePage() {
         });
         
         console.log('Portfolio saved to Firebase Storage successfully');
+        
+        // Create Firestore document for the portfolio
+        try {
+          const portfolioDoc = doc(db, 'users', user.uid, 'portfolios', data.portfolioId);
+          await setDoc(portfolioDoc, {
+            title: file.name.replace(/\.[^/.]+$/, ''), // Use filename without extension as initial title
+            published: false, // Not published until edited and saved
+            createdAt: serverTimestamp(),
+            updatedAt: serverTimestamp(),
+          });
+          console.log('Portfolio metadata saved to Firestore');
+        } catch (firestoreError) {
+          console.error('Error saving to Firestore:', firestoreError);
+          // Don't fail the whole operation if Firestore fails
+        }
       }
       
       clearInterval(progressInterval);

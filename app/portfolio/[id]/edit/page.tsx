@@ -5,10 +5,13 @@ import { useRouter } from 'next/navigation';
 import { Loader2, Save } from 'lucide-react';
 import { use } from 'react';
 import { ref, getDownloadURL, uploadString } from 'firebase/storage';
-import { storage } from '@/lib/firebase';
+import { storage, db } from '@/lib/firebase';
+import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
+import { useAuth } from '@/lib/auth';
 
 export default function EditPortfolioPage({ params }: { params: Promise<{ id: string }> }) {
   const router = useRouter();
+  const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [portfolioHtml, setPortfolioHtml] = useState('');
@@ -381,6 +384,21 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
       const iframeDoc = iframe.contentDocument || iframe.contentWindow?.document;
       
       if (iframeDoc) {
+        // Extract portfolio title from the HTML for the dashboard
+        let portfolioTitle = 'My Portfolio';
+        const h1Elements = iframeDoc.querySelectorAll('h1');
+        if (h1Elements.length > 0) {
+          // Get the first h1 that contains actual name/title
+          for (const h1 of h1Elements) {
+            const text = h1.textContent?.trim() || '';
+            // Skip navigation or section titles
+            if (text && !text.toLowerCase().includes('portfolio') && text.length > 2) {
+              portfolioTitle = text;
+              break;
+            }
+          }
+        }
+        
         // Remove editing-mode class to remove all editing styles
         iframeDoc.body.classList.remove('editing-mode');
         
@@ -463,6 +481,24 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
         } catch (verifyError) {
           console.error('Error verifying portfolio upload:', verifyError);
           // Still continue with redirect even if verification fails
+        }
+        
+        // Save portfolio metadata to Firestore
+        if (user) {
+          try {
+            const portfolioDoc = doc(db, 'users', user.uid, 'portfolios', id);
+            await setDoc(portfolioDoc, {
+              title: portfolioTitle,
+              published: true,
+              updatedAt: serverTimestamp(),
+              createdAt: serverTimestamp(), // This will only set on first save
+            }, { merge: true }); // merge: true ensures we don't overwrite existing fields
+            
+            console.log('Portfolio metadata saved to Firestore');
+          } catch (firestoreError) {
+            console.error('Error saving to Firestore:', firestoreError);
+            // Don't fail the whole operation if Firestore fails
+          }
         }
         
         // Add a small delay to ensure propagation

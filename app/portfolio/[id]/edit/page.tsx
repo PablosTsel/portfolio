@@ -487,18 +487,30 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
         if (user) {
           try {
             const portfolioDoc = doc(db, 'users', user.uid, 'portfolios', id);
-            await setDoc(portfolioDoc, {
+            const portfolioData = {
               title: portfolioTitle,
               published: true,
               updatedAt: serverTimestamp(),
               createdAt: serverTimestamp(), // This will only set on first save
-            }, { merge: true }); // merge: true ensures we don't overwrite existing fields
+            };
             
-            console.log('Portfolio metadata saved to Firestore');
+            console.log('Saving to Firestore:', {
+              userId: user.uid,
+              portfolioId: id,
+              data: portfolioData
+            });
+            
+            await setDoc(portfolioDoc, portfolioData, { merge: true }); // merge: true ensures we don't overwrite existing fields
+            
+            console.log('Portfolio metadata saved to Firestore successfully');
           } catch (firestoreError) {
             console.error('Error saving to Firestore:', firestoreError);
+            const errorMessage = firestoreError instanceof Error ? firestoreError.message : 'Unknown error';
+            alert(`Failed to save portfolio metadata: ${errorMessage}`);
             // Don't fail the whole operation if Firestore fails
           }
+        } else {
+          console.error('No user found when trying to save to Firestore');
         }
         
         // Add a small delay to ensure propagation

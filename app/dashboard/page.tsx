@@ -22,14 +22,15 @@ import {
   Settings,
   Home
 } from "lucide-react";
+import { db } from "@/lib/firebase";
+import { collection, onSnapshot, query, orderBy, deleteDoc, doc } from "firebase/firestore";
 
 interface Portfolio {
   id: string;
-  name: string;
-  template: string;
+  title: string;
+  published: boolean;
   createdAt: any;
   updatedAt: any;
-  status: string;
 }
 
 export default function Dashboard() {
@@ -40,32 +41,32 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState('portfolios');
   const [loadingPortfolios, setLoadingPortfolios] = useState(true);
 
-  // Load portfolios from file system
+  // Load portfolios from Firestore
   useEffect(() => {
-    const loadPortfolios = async () => {
-      if (!user) return;
-      
-      try {
-        // For now, fetch portfolios from the file system via an API endpoint
-        const response = await fetch('/api/portfolio/list');
-        if (response.ok) {
-          const data = await response.json();
-          // Filter portfolios for the current user
-          const userPortfolios = data.portfolios.filter((p: any) => {
-            // Since we don't have user info in the file system, 
-            // we'll show all portfolios for now
-            return true;
-          });
-          setPortfolios(userPortfolios);
-        }
-      } catch (error) {
-        console.error('Error loading portfolios:', error);
-      } finally {
-        setLoadingPortfolios(false);
-      }
-    };
+    if (!user) {
+      setLoadingPortfolios(false);
+      return;
+    }
 
-    loadPortfolios();
+    // Set up real-time listener for portfolios
+    const portfoliosRef = collection(db, 'users', user.uid, 'portfolios');
+    const q = query(portfoliosRef, orderBy('createdAt', 'desc'));
+    
+    const unsubscribe = onSnapshot(q, (snapshot) => {
+      const portfoliosList = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      } as Portfolio));
+      
+      setPortfolios(portfoliosList);
+      setLoadingPortfolios(false);
+    }, (error) => {
+      console.error('Error loading portfolios:', error);
+      setLoadingPortfolios(false);
+    });
+
+    // Cleanup subscription
+    return () => unsubscribe();
   }, [user]);
 
   // Redirect to home if not authenticated
@@ -76,22 +77,18 @@ export default function Dashboard() {
   }, [user, loading, router]);
 
   const handleDelete = async (portfolioId: string) => {
+    if (!user) return;
     if (!confirm('Are you sure you want to delete this portfolio?')) return;
 
     try {
-      const response = await fetch(`/api/portfolio/delete`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ portfolioId }),
-      });
+      // Delete from Firestore
+      await deleteDoc(doc(db, 'users', user.uid, 'portfolios', portfolioId));
       
-      if (response.ok) {
-        setPortfolios(portfolios.filter(p => p.id !== portfolioId));
-      }
+      // You might also want to delete from Firebase Storage here
+      // But for now, we'll just remove from Firestore
     } catch (error) {
       console.error('Error deleting portfolio:', error);
+      alert('Failed to delete portfolio. Please try again.');
     }
   };
 
@@ -259,10 +256,14 @@ export default function Dashboard() {
                 <div className="p-4 border-b border-slate-200 dark:border-slate-700">
                   <div className="flex items-center justify-between">
                     <h3 className="font-medium text-slate-900 dark:text-white truncate">
-                      {portfolio.name}
+                      {portfolio.title || 'Untitled Portfolio'}
                     </h3>
-                    <span className="text-xs text-blue-600 dark:text-blue-400">
-                      {portfolio.template}
+                    <span className={`text-xs px-2 py-1 rounded-full ${
+                      portfolio.published 
+                        ? 'bg-green-100 text-green-800 dark:bg-green-900/20 dark:text-green-400' 
+                        : 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/20 dark:text-yellow-400'
+                    }`}>
+                      {portfolio.published ? 'Published' : 'Draft'}
                     </span>
                   </div>
                 </div>

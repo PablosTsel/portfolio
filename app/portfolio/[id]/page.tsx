@@ -12,6 +12,7 @@ export default function PortfolioPage({ params }: { params: Promise<{ id: string
   const [loading, setLoading] = useState(true);
   const [portfolioHtml, setPortfolioHtml] = useState('');
   const [exists, setExists] = useState(false);
+  const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   
   // Unwrap the params promise
   const { id } = use(params);
@@ -19,9 +20,25 @@ export default function PortfolioPage({ params }: { params: Promise<{ id: string
   useEffect(() => {
     const loadPortfolio = async () => {
       try {
-        // Get timestamp from URL to force fresh load
+        // Get parameters from URL
         const urlParams = new URLSearchParams(window.location.search);
         const timestamp = urlParams.get('t') || Date.now();
+        const success = urlParams.get('success');
+        
+        // Show success popup if success parameter is present
+        if (success === 'true') {
+          setShowSuccessPopup(true);
+          
+          // Clean URL by removing success parameter but keeping timestamp
+          const newUrl = new URL(window.location.href);
+          newUrl.searchParams.delete('success');
+          window.history.replaceState({}, '', newUrl.toString());
+          
+          // Auto-hide popup after 5 seconds
+          setTimeout(() => {
+            setShowSuccessPopup(false);
+          }, 5000);
+        }
         
         // Try to load from our API endpoint which handles Firebase Storage internally
         try {
@@ -129,18 +146,43 @@ export default function PortfolioPage({ params }: { params: Promise<{ id: string
   // If we have HTML content, render it in an iframe
   if (portfolioHtml) {
     return (
-      <iframe
-        srcDoc={portfolioHtml}
-        style={{
-          width: '100vw',
-          height: '100vh',
-          border: 'none',
-          margin: 0,
-          padding: 0,
-          display: 'block'
-        }}
-        title="Portfolio"
-      />
+      <div className="relative">
+        {/* Success Popup */}
+        {showSuccessPopup && (
+          <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-50 backdrop-blur-sm">
+            <div className="bg-white dark:bg-slate-800 rounded-xl shadow-2xl p-8 mx-4 max-w-md w-full transform animate-in fade-in zoom-in duration-500 border border-slate-200 dark:border-slate-700">
+              <div className="w-16 h-16 mx-auto mb-4 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center">
+                <svg className="w-8 h-8 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+                </svg>
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 dark:text-white mb-2 text-center">
+                🎉 Portfolio is Live!
+              </h3>
+              <p className="text-slate-600 dark:text-slate-300 mb-4 text-center">
+                Your portfolio has been successfully saved and is now live. Share it with the world!
+              </p>
+              <div className="flex items-center justify-center space-x-2 text-sm text-slate-500 dark:text-slate-400">
+                <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                <span>Automatically closing...</span>
+              </div>
+            </div>
+          </div>
+        )}
+        
+        <iframe
+          srcDoc={portfolioHtml}
+          style={{
+            width: '100vw',
+            height: '100vh',
+            border: 'none',
+            margin: 0,
+            padding: 0,
+            display: 'block'
+          }}
+          title="Portfolio"
+        />
+      </div>
     );
   }
 

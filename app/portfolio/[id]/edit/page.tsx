@@ -1746,9 +1746,9 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
         // Add a small delay to ensure propagation
         await new Promise(resolve => setTimeout(resolve, 1000));
         
-        // Redirect to the portfolio with a cache-busting parameter
+        // Redirect to the portfolio with a success parameter and cache-busting timestamp
         const timestamp = Date.now();
-        router.push(`/portfolio/${id}?t=${timestamp}`);
+        router.push(`/portfolio/${id}?success=true&t=${timestamp}`);
       }
     } catch (error) {
       console.error('Error saving portfolio:', error);

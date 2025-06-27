@@ -319,9 +319,10 @@ function getStyles(): string {
 
     .hero-content {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: 1fr 350px;
       gap: 4rem;
       align-items: center;
+      width: 100%;
     }
 
     .hero-text h1 {
@@ -380,6 +381,9 @@ function getStyles(): string {
     .hero-image {
       display: flex;
       justify-content: center;
+      align-items: center;
+      width: 350px;
+      height: 350px;
     }
 
     .hero-image img {
@@ -602,8 +606,9 @@ function getStyles(): string {
       }
 
       .hero-content {
-        grid-template-columns: 1fr;
+        grid-template-columns: 1fr !important;
         text-align: center;
+        gap: 2rem !important;
       }
 
       .hero-text h1 {
@@ -612,6 +617,9 @@ function getStyles(): string {
 
       .hero-image {
         margin-top: 2rem;
+        width: 100% !important;
+        height: auto !important;
+        justify-content: center !important;
       }
 
       .hero-image img,

@@ -228,9 +228,24 @@ export default function Dashboard() {
             {/* Empty State */}
             {!loadingPortfolios && portfolios.length === 0 && (
               <div className="col-span-full">
-                <div className="text-center py-12 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg">
-                  <div className="w-16 h-16 mx-auto mb-4 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20 rounded-full flex items-center justify-center">
-                    <Plus className="h-8 w-8 text-blue-600 dark:text-blue-400" />
+                <div className="text-center py-8 border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg overflow-hidden">
+                  {/* Template Preview */}
+                  <div className="w-full max-w-md mx-auto mb-6 aspect-video bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 rounded-lg overflow-hidden relative">
+                    <img 
+                      src="/pictures/Template1.png" 
+                      alt="Portfolio Template Preview" 
+                      className="w-full h-full object-cover opacity-60 select-none"
+                      style={{
+                        imageRendering: 'auto',
+                        transform: 'translate3d(0,0,0)',
+                        backfaceVisibility: 'hidden'
+                      }}
+                    />
+                    <div className="absolute inset-0 flex items-center justify-center bg-black/10">
+                      <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center">
+                        <Plus className="h-8 w-8 text-white" />
+                      </div>
+                    </div>
                   </div>
                   <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
                     No portfolios yet
@@ -269,13 +284,17 @@ export default function Dashboard() {
                 </div>
 
                 {/* Card Preview */}
-                <div className="aspect-video bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="w-16 h-16 mx-auto mb-2 bg-white dark:bg-slate-800 rounded-full flex items-center justify-center">
-                      <FileText className="h-8 w-8 text-blue-600 dark:text-blue-400" />
-                    </div>
-                    <p className="text-sm text-slate-600 dark:text-slate-300">Portfolio Preview</p>
-                  </div>
+                <div className="aspect-video bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 flex items-center justify-center overflow-hidden">
+                  <img 
+                    src="/pictures/Template1.png" 
+                    alt="Portfolio Template Preview" 
+                    className="w-full h-full object-cover select-none"
+                    style={{
+                      imageRendering: 'auto',
+                      transform: 'translate3d(0,0,0)',
+                      backfaceVisibility: 'hidden'
+                    }}
+                  />
                 </div>
 
                 {/* Card Actions */}
@@ -289,6 +308,15 @@ export default function Dashboard() {
                     >
                       <Eye className="h-3.5 w-3.5 mr-1" />
                       View
+                    </Button>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => router.push(`/portfolio/${portfolio.id}/edit`)}
+                    >
+                      <Edit3 className="h-3.5 w-3.5 mr-1" />
+                      Edit
                     </Button>
                     <Button
                       variant="outline"
@@ -316,19 +344,34 @@ export default function Dashboard() {
             {/* Create New Portfolio Card */}
             {!loadingPortfolios && portfolios.length > 0 && (
               <div 
-                className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg p-6 hover:border-blue-500 dark:hover:border-blue-400 transition-colors cursor-pointer group"
+                className="border-2 border-dashed border-slate-300 dark:border-slate-600 rounded-lg overflow-hidden hover:border-blue-500 dark:hover:border-blue-400 transition-colors cursor-pointer group"
                 onClick={() => router.push('/generate')}
               >
-                <div className="text-center">
-                  <div className="w-12 h-12 mx-auto mb-4 bg-gradient-to-r from-blue-100 to-purple-100 dark:from-blue-900/20 dark:to-purple-900/20 rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
-                    <Plus className="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                {/* Template Preview */}
+                <div className="aspect-video bg-gradient-to-br from-blue-50 to-purple-50 dark:from-blue-900/20 dark:to-purple-900/20 flex items-center justify-center overflow-hidden relative">
+                  <img 
+                    src="/pictures/Template1.png" 
+                    alt="Portfolio Template Preview" 
+                    className="w-full h-full object-cover opacity-50 group-hover:opacity-70 transition-opacity select-none"
+                    style={{
+                      imageRendering: 'auto',
+                      transform: 'translate3d(0,0,0)',
+                      backfaceVisibility: 'hidden'
+                    }}
+                  />
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/20 group-hover:bg-black/10 transition-colors">
+                    <div className="text-center text-white">
+                      <div className="w-16 h-16 mx-auto mb-4 bg-white/20 backdrop-blur-sm rounded-full flex items-center justify-center group-hover:scale-110 transition-transform">
+                        <Plus className="h-8 w-8" />
+                      </div>
+                      <h3 className="text-lg font-bold mb-1">
+                        Create New Portfolio
+                      </h3>
+                      <p className="text-sm opacity-90">
+                        Upload your CV and generate with AI
+                      </p>
+                    </div>
                   </div>
-                  <h3 className="text-lg font-medium text-slate-900 dark:text-white mb-2">
-                    Create New Portfolio
-                  </h3>
-                  <p className="text-slate-600 dark:text-slate-300 text-sm">
-                    Upload your CV and generate with AI
-                  </p>
                 </div>
               </div>
             )}

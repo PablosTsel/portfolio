@@ -296,6 +296,194 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
                   background: #e5e7eb;
                   color: #374151;
                 }
+                
+                /* Add Project Button - ONLY for editing mode */
+                .editing-mode .add-project-btn {
+                  display: flex !important;
+                  align-items: center;
+                  justify-content: center;
+                  width: 60px;
+                  height: 60px;
+                  background: #3b82f6;
+                  color: white;
+                  border-radius: 50%;
+                  border: none;
+                  font-size: 28px;
+                  cursor: pointer;
+                  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+                  transition: all 0.3s ease;
+                  position: relative;
+                  margin: auto;
+                }
+                
+                .editing-mode .projects-grid {
+                  position: relative;
+                }
+                
+                .editing-mode .add-project-btn:hover {
+                  background: #2563eb;
+                  transform: scale(1.1);
+                  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+                }
+                
+                .editing-mode .add-project-btn:active {
+                  transform: scale(0.95);
+                }
+                
+                /* Hide add project button when not in editing mode */
+                .add-project-btn {
+                  display: none !important;
+                }
+                
+                /* Make add button container a proper grid item */
+                .editing-mode .add-project-btn-container {
+                  background: transparent;
+                  border-radius: 12px;
+                  overflow: hidden;
+                  transition: transform 0.3s ease, box-shadow 0.3s ease;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  min-height: 300px;
+                  border: 2px dashed rgba(59, 130, 246, 0.3);
+                }
+                
+                .editing-mode .add-project-btn-container:hover {
+                  transform: translateY(-5px);
+                  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+                  border-color: rgba(59, 130, 246, 0.5);
+                  background: rgba(59, 130, 246, 0.05);
+                }
+                
+                /* New project card template */
+                .new-project-card {
+                  background: var(--card-bg);
+                  border-radius: 12px;
+                  overflow: hidden;
+                  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+                  transition: transform 0.3s ease, box-shadow 0.3s ease;
+                }
+                
+                .new-project-card:hover {
+                  transform: translateY(-5px);
+                  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+                }
+                
+                /* Add Skill Button - ONLY for editing mode */
+                .editing-mode .add-skill-btn {
+                  display: inline-flex !important;
+                  align-items: center;
+                  justify-content: center;
+                  width: 40px;
+                  height: 40px;
+                  background: #3b82f6;
+                  color: white;
+                  border-radius: 50%;
+                  border: none;
+                  font-size: 20px;
+                  cursor: pointer;
+                  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+                  transition: all 0.3s ease;
+                  margin-left: 0.5rem;
+                  vertical-align: middle;
+                }
+                
+                .editing-mode .add-skill-btn:hover {
+                  background: #2563eb;
+                  transform: scale(1.1);
+                  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+                }
+                
+                .editing-mode .add-skill-btn:active {
+                  transform: scale(0.95);
+                }
+                
+                /* Hide add skill button when not in editing mode */
+                .add-skill-btn {
+                  display: none !important;
+                }
+                
+                /* New skill tag styles */
+                .editing-mode .skill-tag[contenteditable="true"] {
+                  min-width: 80px;
+                  display: inline-block;
+                  background-color: var(--primary-color) !important;
+                  color: white !important;
+                }
+                
+                .editing-mode .skill-tag[contenteditable="true"]:focus {
+                  background-color: var(--primary-color) !important;
+                  color: white !important;
+                  outline: 2px solid rgba(255, 255, 255, 0.5) !important;
+                }
+                
+                /* Delete buttons - ONLY for editing mode */
+                .editing-mode .skill-tag {
+                  position: relative;
+                }
+                
+                .editing-mode .delete-skill-btn {
+                  position: absolute;
+                  top: -8px;
+                  right: -8px;
+                  width: 20px;
+                  height: 20px;
+                  background: #ef4444 !important;
+                  color: white !important;
+                  border-radius: 50%;
+                  border: none;
+                  font-size: 12px;
+                  font-weight: bold;
+                  cursor: pointer;
+                  display: flex !important;
+                  align-items: center;
+                  justify-content: center;
+                  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                  transition: all 0.3s ease;
+                  z-index: 1000 !important;
+                  line-height: 1;
+                }
+                
+                .editing-mode .delete-skill-btn:hover {
+                  background: #dc2626 !important;
+                  transform: scale(1.1);
+                }
+                
+                .editing-mode .project-card {
+                  position: relative;
+                }
+                
+                .editing-mode .delete-project-btn {
+                  position: absolute;
+                  top: 10px;
+                  right: 10px;
+                  width: 30px;
+                  height: 30px;
+                  background: #ef4444 !important;
+                  color: white !important;
+                  border-radius: 50%;
+                  border: none;
+                  font-size: 16px;
+                  font-weight: bold;
+                  cursor: pointer;
+                  display: flex !important;
+                  align-items: center;
+                  justify-content: center;
+                  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+                  transition: all 0.3s ease;
+                  z-index: 1000 !important;
+                  line-height: 1;
+                }
+                
+                .editing-mode .delete-project-btn:hover {
+                  background: #dc2626 !important;
+                  transform: scale(1.1);
+                }
+                
+                /* Hide delete buttons when not in editing mode */
+                .delete-skill-btn, .delete-project-btn {
+                  display: none !important;
+                }
               </style>
             `;
             
@@ -385,6 +573,216 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
                   };
                   input.click();
                 };
+                
+                // Add new project function
+                window.addNewProject = function() {
+                  const addButton = document.querySelector('.add-project-btn');
+                  const addButtonContainer = addButton ? addButton.parentElement : null;
+                  
+                  if (addButtonContainer) {
+                    // Create new project card
+                    const newProjectCard = document.createElement('div');
+                    newProjectCard.className = 'project-card';
+                    newProjectCard.innerHTML = \`
+                      <div class="project-image">
+                        <img src="https://placehold.co/600x400/e2e8f0/1e293b?text=Project+Image" 
+                             alt="New Project" 
+                             class="project-img" 
+                             style="cursor: pointer;" 
+                             onclick="window.uploadProjectImage(this)" 
+                             title="Click to upload project image">
+                      </div>
+                      <div class="project-info">
+                        <h3 contenteditable="true" style="outline: none; cursor: text;">Project Name</h3>
+                        <p contenteditable="true" style="outline: none; cursor: text;">Describe your project here. What did you build? What technologies did you use? What was the impact or outcome?</p>
+                      </div>
+                    \`;
+                    
+                    // Replace the button container with the new project card
+                    addButtonContainer.parentNode.replaceChild(newProjectCard, addButtonContainer);
+                    
+                    // Re-add the button container after the new card
+                    const projectsGrid = document.querySelector('.projects-grid');
+                    projectsGrid.appendChild(addButtonContainer);
+                    
+                    // Add delete button to the new project
+                    window.addDeleteButtonToProject(newProjectCard);
+                    
+                    // Scroll to the new card
+                    newProjectCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // Focus on the project name for immediate editing
+                    const projectName = newProjectCard.querySelector('h3');
+                    if (projectName) {
+                      projectName.focus();
+                      // Select all text
+                      const range = document.createRange();
+                      range.selectNodeContents(projectName);
+                      const selection = window.getSelection();
+                      selection.removeAllRanges();
+                      selection.addRange(range);
+                    }
+                  }
+                };
+                
+                // Add new skill function
+                window.addNewSkill = function() {
+                  const addSkillBtn = document.querySelector('.add-skill-btn');
+                  
+                  if (addSkillBtn) {
+                    // Create new skill tag
+                    const newSkillTag = document.createElement('div');
+                    newSkillTag.className = 'skill-tag';
+                    newSkillTag.contentEditable = 'true';
+                    newSkillTag.style.outline = 'none';
+                    newSkillTag.style.cursor = 'text';
+                    newSkillTag.textContent = 'New Skill';
+                    
+                    // Add event listener for Enter key
+                    newSkillTag.addEventListener('keydown', function(e) {
+                      if (e.key === 'Enter') {
+                        e.preventDefault(); // Prevent new line
+                        newSkillTag.blur(); // Finish editing
+                      }
+                    });
+                    
+                    // Insert the new skill before the button
+                    addSkillBtn.parentNode.insertBefore(newSkillTag, addSkillBtn);
+                    
+                    // Add delete button to the new skill
+                    window.addDeleteButtonToSkill(newSkillTag);
+                    
+                    // Focus on the new skill and select all text
+                    newSkillTag.focus();
+                    const range = document.createRange();
+                    range.selectNodeContents(newSkillTag);
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                  }
+                };
+                
+                // Delete skill function
+                window.deleteSkill = function(skillTag) {
+                  if (confirm('Are you sure you want to delete this skill?')) {
+                    skillTag.remove();
+                  }
+                };
+                
+                // Delete project function
+                window.deleteProject = function(projectCard) {
+                  if (confirm('Are you sure you want to delete this project?')) {
+                    projectCard.remove();
+                  }
+                };
+                
+                // Add delete button to skill
+                window.addDeleteButtonToSkill = function(skillTag) {
+                  // Don't add if it already has one
+                  if (skillTag.querySelector('.delete-skill-btn')) {
+                    return;
+                  }
+                  
+                  const deleteBtn = document.createElement('button');
+                  deleteBtn.className = 'delete-skill-btn';
+                  deleteBtn.innerHTML = '×';
+                  deleteBtn.title = 'Delete skill';
+                  deleteBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    window.deleteSkill(skillTag);
+                  };
+                  
+                  skillTag.appendChild(deleteBtn);
+                };
+                
+                // Add delete button to project
+                window.addDeleteButtonToProject = function(projectCard) {
+                  // Don't add if it already has one
+                  if (projectCard.querySelector('.delete-project-btn')) {
+                    return;
+                  }
+                  
+                  const deleteBtn = document.createElement('button');
+                  deleteBtn.className = 'delete-project-btn';
+                  deleteBtn.innerHTML = '×';
+                  deleteBtn.title = 'Delete project';
+                  deleteBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    window.deleteProject(projectCard);
+                  };
+                  
+                  projectCard.appendChild(deleteBtn);
+                };
+                
+                // Add the Add Project button after DOM loads
+                window.addEventListener('DOMContentLoaded', function() {
+                  setTimeout(function() {
+                    const projectsGrid = document.querySelector('.projects-grid');
+                    if (projectsGrid && !document.querySelector('.add-project-btn')) {
+                      // Create the button container as a grid item
+                      const addProjectContainer = document.createElement('div');
+                      addProjectContainer.className = 'add-project-btn-container';
+                      
+                      const addProjectButton = document.createElement('button');
+                      addProjectButton.className = 'add-project-btn';
+                      addProjectButton.onclick = window.addNewProject;
+                      addProjectButton.title = 'Add new project';
+                      addProjectButton.innerHTML = \`
+                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                          <line x1="12" y1="5" x2="12" y2="19"></line>
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                      \`;
+                      
+                      addProjectContainer.appendChild(addProjectButton);
+                      projectsGrid.appendChild(addProjectContainer);
+                    }
+                    
+                    // Add delete buttons to existing projects
+                    const existingProjects = document.querySelectorAll('.project-card');
+                    existingProjects.forEach(function(projectCard) {
+                      window.addDeleteButtonToProject(projectCard);
+                    });
+                    
+                    // Add the Add Skill button
+                    const skillsContainer = document.querySelector('.skills-container');
+                    if (skillsContainer && !document.querySelector('.add-skill-btn')) {
+                      const addSkillButton = document.createElement('button');
+                      addSkillButton.className = 'add-skill-btn';
+                      addSkillButton.onclick = window.addNewSkill;
+                      addSkillButton.title = 'Add new skill';
+                      addSkillButton.innerHTML = \`
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <line x1="12" y1="5" x2="12" y2="19"></line>
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                      \`;
+                      
+                      skillsContainer.appendChild(addSkillButton);
+                      
+                      // Add Enter key handling for existing skill tags and make them editable
+                      const existingSkillTags = document.querySelectorAll('.skill-tag');
+                      existingSkillTags.forEach(function(skillTag) {
+                        // Make it editable if it's not already
+                        if (!skillTag.hasAttribute('contenteditable')) {
+                          skillTag.contentEditable = 'true';
+                          skillTag.style.outline = 'none';
+                          skillTag.style.cursor = 'text';
+                        }
+                        
+                        skillTag.addEventListener('keydown', function(e) {
+                          if (e.key === 'Enter') {
+                            e.preventDefault(); // Prevent new line
+                            skillTag.blur(); // Finish editing
+                          }
+                        });
+                        
+                        // Add delete button to each skill
+                        window.addDeleteButtonToSkill(skillTag);
+                      });
+                    }
+                  }, 100);
+                });
               </script>
             `;
             
@@ -673,6 +1071,194 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
                   background: #e5e7eb;
                   color: #374151;
                 }
+                
+                /* Add Project Button - ONLY for editing mode */
+                .editing-mode .add-project-btn {
+                  display: flex !important;
+                  align-items: center;
+                  justify-content: center;
+                  width: 60px;
+                  height: 60px;
+                  background: #3b82f6;
+                  color: white;
+                  border-radius: 50%;
+                  border: none;
+                  font-size: 28px;
+                  cursor: pointer;
+                  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+                  transition: all 0.3s ease;
+                  position: relative;
+                  margin: auto;
+                }
+                
+                .editing-mode .projects-grid {
+                  position: relative;
+                }
+                
+                .editing-mode .add-project-btn:hover {
+                  background: #2563eb;
+                  transform: scale(1.1);
+                  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+                }
+                
+                .editing-mode .add-project-btn:active {
+                  transform: scale(0.95);
+                }
+                
+                /* Hide add project button when not in editing mode */
+                .add-project-btn {
+                  display: none !important;
+                }
+                
+                /* Make add button container a proper grid item */
+                .editing-mode .add-project-btn-container {
+                  background: transparent;
+                  border-radius: 12px;
+                  overflow: hidden;
+                  transition: transform 0.3s ease, box-shadow 0.3s ease;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  min-height: 300px;
+                  border: 2px dashed rgba(59, 130, 246, 0.3);
+                }
+                
+                .editing-mode .add-project-btn-container:hover {
+                  transform: translateY(-5px);
+                  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+                  border-color: rgba(59, 130, 246, 0.5);
+                  background: rgba(59, 130, 246, 0.05);
+                }
+                
+                /* New project card template */
+                .new-project-card {
+                  background: var(--card-bg);
+                  border-radius: 12px;
+                  overflow: hidden;
+                  box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+                  transition: transform 0.3s ease, box-shadow 0.3s ease;
+                }
+                
+                .new-project-card:hover {
+                  transform: translateY(-5px);
+                  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+                }
+                
+                /* Add Skill Button - ONLY for editing mode */
+                .editing-mode .add-skill-btn {
+                  display: inline-flex !important;
+                  align-items: center;
+                  justify-content: center;
+                  width: 40px;
+                  height: 40px;
+                  background: #3b82f6;
+                  color: white;
+                  border-radius: 50%;
+                  border: none;
+                  font-size: 20px;
+                  cursor: pointer;
+                  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
+                  transition: all 0.3s ease;
+                  margin-left: 0.5rem;
+                  vertical-align: middle;
+                }
+                
+                .editing-mode .add-skill-btn:hover {
+                  background: #2563eb;
+                  transform: scale(1.1);
+                  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+                }
+                
+                .editing-mode .add-skill-btn:active {
+                  transform: scale(0.95);
+                }
+                
+                /* Hide add skill button when not in editing mode */
+                .add-skill-btn {
+                  display: none !important;
+                }
+                
+                /* New skill tag styles */
+                .editing-mode .skill-tag[contenteditable="true"] {
+                  min-width: 80px;
+                  display: inline-block;
+                  background-color: var(--primary-color) !important;
+                  color: white !important;
+                }
+                
+                .editing-mode .skill-tag[contenteditable="true"]:focus {
+                  background-color: var(--primary-color) !important;
+                  color: white !important;
+                  outline: 2px solid rgba(255, 255, 255, 0.5) !important;
+                }
+                
+                /* Delete buttons - ONLY for editing mode */
+                .editing-mode .skill-tag {
+                  position: relative;
+                }
+                
+                .editing-mode .delete-skill-btn {
+                  position: absolute;
+                  top: -8px;
+                  right: -8px;
+                  width: 20px;
+                  height: 20px;
+                  background: #ef4444 !important;
+                  color: white !important;
+                  border-radius: 50%;
+                  border: none;
+                  font-size: 12px;
+                  font-weight: bold;
+                  cursor: pointer;
+                  display: flex !important;
+                  align-items: center;
+                  justify-content: center;
+                  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+                  transition: all 0.3s ease;
+                  z-index: 1000 !important;
+                  line-height: 1;
+                }
+                
+                .editing-mode .delete-skill-btn:hover {
+                  background: #dc2626 !important;
+                  transform: scale(1.1);
+                }
+                
+                .editing-mode .project-card {
+                  position: relative;
+                }
+                
+                .editing-mode .delete-project-btn {
+                  position: absolute;
+                  top: 10px;
+                  right: 10px;
+                  width: 30px;
+                  height: 30px;
+                  background: #ef4444 !important;
+                  color: white !important;
+                  border-radius: 50%;
+                  border: none;
+                  font-size: 16px;
+                  font-weight: bold;
+                  cursor: pointer;
+                  display: flex !important;
+                  align-items: center;
+                  justify-content: center;
+                  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+                  transition: all 0.3s ease;
+                  z-index: 1000 !important;
+                  line-height: 1;
+                }
+                
+                .editing-mode .delete-project-btn:hover {
+                  background: #dc2626 !important;
+                  transform: scale(1.1);
+                }
+                
+                /* Hide delete buttons when not in editing mode */
+                .delete-skill-btn, .delete-project-btn {
+                  display: none !important;
+                }
               </style>
             `;
             
@@ -762,6 +1348,216 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
                   };
                   input.click();
                 };
+                
+                // Add new project function
+                window.addNewProject = function() {
+                  const addButton = document.querySelector('.add-project-btn');
+                  const addButtonContainer = addButton ? addButton.parentElement : null;
+                  
+                  if (addButtonContainer) {
+                    // Create new project card
+                    const newProjectCard = document.createElement('div');
+                    newProjectCard.className = 'project-card';
+                    newProjectCard.innerHTML = \`
+                      <div class="project-image">
+                        <img src="https://placehold.co/600x400/e2e8f0/1e293b?text=Project+Image" 
+                             alt="New Project" 
+                             class="project-img" 
+                             style="cursor: pointer;" 
+                             onclick="window.uploadProjectImage(this)" 
+                             title="Click to upload project image">
+                      </div>
+                      <div class="project-info">
+                        <h3 contenteditable="true" style="outline: none; cursor: text;">Project Name</h3>
+                        <p contenteditable="true" style="outline: none; cursor: text;">Describe your project here. What did you build? What technologies did you use? What was the impact or outcome?</p>
+                      </div>
+                    \`;
+                    
+                    // Replace the button container with the new project card
+                    addButtonContainer.parentNode.replaceChild(newProjectCard, addButtonContainer);
+                    
+                    // Re-add the button container after the new card
+                    const projectsGrid = document.querySelector('.projects-grid');
+                    projectsGrid.appendChild(addButtonContainer);
+                    
+                    // Add delete button to the new project
+                    window.addDeleteButtonToProject(newProjectCard);
+                    
+                    // Scroll to the new card
+                    newProjectCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    
+                    // Focus on the project name for immediate editing
+                    const projectName = newProjectCard.querySelector('h3');
+                    if (projectName) {
+                      projectName.focus();
+                      // Select all text
+                      const range = document.createRange();
+                      range.selectNodeContents(projectName);
+                      const selection = window.getSelection();
+                      selection.removeAllRanges();
+                      selection.addRange(range);
+                    }
+                  }
+                };
+                
+                // Add new skill function
+                window.addNewSkill = function() {
+                  const addSkillBtn = document.querySelector('.add-skill-btn');
+                  
+                  if (addSkillBtn) {
+                    // Create new skill tag
+                    const newSkillTag = document.createElement('div');
+                    newSkillTag.className = 'skill-tag';
+                    newSkillTag.contentEditable = 'true';
+                    newSkillTag.style.outline = 'none';
+                    newSkillTag.style.cursor = 'text';
+                    newSkillTag.textContent = 'New Skill';
+                    
+                    // Add event listener for Enter key
+                    newSkillTag.addEventListener('keydown', function(e) {
+                      if (e.key === 'Enter') {
+                        e.preventDefault(); // Prevent new line
+                        newSkillTag.blur(); // Finish editing
+                      }
+                    });
+                    
+                    // Insert the new skill before the button
+                    addSkillBtn.parentNode.insertBefore(newSkillTag, addSkillBtn);
+                    
+                    // Add delete button to the new skill
+                    window.addDeleteButtonToSkill(newSkillTag);
+                    
+                    // Focus on the new skill and select all text
+                    newSkillTag.focus();
+                    const range = document.createRange();
+                    range.selectNodeContents(newSkillTag);
+                    const selection = window.getSelection();
+                    selection.removeAllRanges();
+                    selection.addRange(range);
+                  }
+                };
+                
+                // Delete skill function
+                window.deleteSkill = function(skillTag) {
+                  if (confirm('Are you sure you want to delete this skill?')) {
+                    skillTag.remove();
+                  }
+                };
+                
+                // Delete project function
+                window.deleteProject = function(projectCard) {
+                  if (confirm('Are you sure you want to delete this project?')) {
+                    projectCard.remove();
+                  }
+                };
+                
+                // Add delete button to skill
+                window.addDeleteButtonToSkill = function(skillTag) {
+                  // Don't add if it already has one
+                  if (skillTag.querySelector('.delete-skill-btn')) {
+                    return;
+                  }
+                  
+                  const deleteBtn = document.createElement('button');
+                  deleteBtn.className = 'delete-skill-btn';
+                  deleteBtn.innerHTML = '×';
+                  deleteBtn.title = 'Delete skill';
+                  deleteBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    window.deleteSkill(skillTag);
+                  };
+                  
+                  skillTag.appendChild(deleteBtn);
+                };
+                
+                // Add delete button to project
+                window.addDeleteButtonToProject = function(projectCard) {
+                  // Don't add if it already has one
+                  if (projectCard.querySelector('.delete-project-btn')) {
+                    return;
+                  }
+                  
+                  const deleteBtn = document.createElement('button');
+                  deleteBtn.className = 'delete-project-btn';
+                  deleteBtn.innerHTML = '×';
+                  deleteBtn.title = 'Delete project';
+                  deleteBtn.onclick = function(e) {
+                    e.stopPropagation();
+                    window.deleteProject(projectCard);
+                  };
+                  
+                  projectCard.appendChild(deleteBtn);
+                };
+                
+                // Add the Add Project button after DOM loads
+                window.addEventListener('DOMContentLoaded', function() {
+                  setTimeout(function() {
+                    const projectsGrid = document.querySelector('.projects-grid');
+                    if (projectsGrid && !document.querySelector('.add-project-btn')) {
+                      // Create the button container as a grid item
+                      const addProjectContainer = document.createElement('div');
+                      addProjectContainer.className = 'add-project-btn-container';
+                      
+                      const addProjectButton = document.createElement('button');
+                      addProjectButton.className = 'add-project-btn';
+                      addProjectButton.onclick = window.addNewProject;
+                      addProjectButton.title = 'Add new project';
+                      addProjectButton.innerHTML = \`
+                        <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3">
+                          <line x1="12" y1="5" x2="12" y2="19"></line>
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                      \`;
+                      
+                      addProjectContainer.appendChild(addProjectButton);
+                      projectsGrid.appendChild(addProjectContainer);
+                    }
+                    
+                    // Add delete buttons to existing projects
+                    const existingProjects = document.querySelectorAll('.project-card');
+                    existingProjects.forEach(function(projectCard) {
+                      window.addDeleteButtonToProject(projectCard);
+                    });
+                    
+                    // Add the Add Skill button
+                    const skillsContainer = document.querySelector('.skills-container');
+                    if (skillsContainer && !document.querySelector('.add-skill-btn')) {
+                      const addSkillButton = document.createElement('button');
+                      addSkillButton.className = 'add-skill-btn';
+                      addSkillButton.onclick = window.addNewSkill;
+                      addSkillButton.title = 'Add new skill';
+                      addSkillButton.innerHTML = \`
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                          <line x1="12" y1="5" x2="12" y2="19"></line>
+                          <line x1="5" y1="12" x2="19" y2="12"></line>
+                        </svg>
+                      \`;
+                      
+                      skillsContainer.appendChild(addSkillButton);
+                      
+                      // Add Enter key handling for existing skill tags and make them editable
+                      const existingSkillTags = document.querySelectorAll('.skill-tag');
+                      existingSkillTags.forEach(function(skillTag) {
+                        // Make it editable if it's not already
+                        if (!skillTag.hasAttribute('contenteditable')) {
+                          skillTag.contentEditable = 'true';
+                          skillTag.style.outline = 'none';
+                          skillTag.style.cursor = 'text';
+                        }
+                        
+                        skillTag.addEventListener('keydown', function(e) {
+                          if (e.key === 'Enter') {
+                            e.preventDefault(); // Prevent new line
+                            skillTag.blur(); // Finish editing
+                          }
+                        });
+                        
+                        // Add delete button to each skill
+                        window.addDeleteButtonToSkill(skillTag);
+                      });
+                    }
+                  }, 100);
+                });
               </script>
             `;
             
@@ -817,6 +1613,25 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
         const saveBtn = iframeDoc.getElementById('save-portfolio');
         if (saveBtn) saveBtn.remove();
         
+        // Remove add project button container
+        const addProjectBtnContainer = iframeDoc.querySelector('.add-project-btn-container');
+        if (addProjectBtnContainer) addProjectBtnContainer.remove();
+        
+        // Remove add project button (in case it exists without container)
+        const addProjectBtn = iframeDoc.querySelector('.add-project-btn');
+        if (addProjectBtn) addProjectBtn.remove();
+        
+        // Remove add skill button
+        const addSkillBtn = iframeDoc.querySelector('.add-skill-btn');
+        if (addSkillBtn) addSkillBtn.remove();
+        
+        // Remove all delete buttons
+        const deleteSkillBtns = iframeDoc.querySelectorAll('.delete-skill-btn');
+        deleteSkillBtns.forEach(btn => btn.remove());
+        
+        const deleteProjectBtns = iframeDoc.querySelectorAll('.delete-project-btn');
+        deleteProjectBtns.forEach(btn => btn.remove());
+        
         // Remove ALL editing-specific CSS styles
         const styleElements = iframeDoc.querySelectorAll('style');
         styleElements.forEach(styleEl => {
@@ -834,7 +1649,11 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
             .replace(/\.project-image::after[^}]*}/g, '') // Remove project image overlays
             .replace(/\.project-image:hover[^}]*}/g, '') // Remove project image hover styles
             .replace(/\.upload-overlay[^}]*}/g, '') // Remove upload modal styles
-            .replace(/\.upload-modal[^}]*}/g, ''); // Remove upload modal styles
+            .replace(/\.upload-modal[^}]*}/g, '') // Remove upload modal styles
+            .replace(/\.add-project-btn[^}]*}/g, '') // Remove add project button styles
+            .replace(/\.add-project-btn-container[^}]*}/g, '') // Remove add button container styles
+            .replace(/\.new-project-card[^}]*}/g, '') // Remove new project card styles
+            .replace(/\.add-skill-btn[^}]*}/g, ''); // Remove add skill button styles
           
           styleEl.textContent = cleanedCSS;
         });

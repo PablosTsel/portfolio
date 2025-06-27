@@ -148,15 +148,31 @@
 - Use publish directory: `.next` (not `out`)
 - **File System Issue**: Cannot write files to public directory on serverless platforms
 - Solution: Return HTML from API and save to Firebase Storage client-side
+- **Function Size Limit**: Netlify has 250 MB limit for serverless functions
+- **Heavy Dependencies**: mammoth, openai, firebase-admin can exceed size limit
+- **Solutions for Size Issue**:
+  1. Use Vercel instead (better Next.js support, larger function limits)
+  2. Move text extraction to client-side with `/api/generate-light`
+  3. Optimize netlify.toml with selective node_modules inclusion
+  4. Use external APIs for document processing
 - **Required Environment Variables**:
   - `OPENAI_API_KEY` (must be actual key, not placeholder)
   - All `NEXT_PUBLIC_FIREBASE_*` variables
   - Firebase Admin variables (if using server-side Firebase)
 - **Firebase Auth**: Add Netlify domain to Firebase Console → Authentication → Settings → Authorized domains
 
+## Deployment on Vercel (Recommended)
+- **Better for Next.js**: Native support, larger function limits (up to 50MB)
+- **Function Timeout**: Up to 60 seconds on free tier
+- **Environment Variables**: Set in Vercel dashboard or use vercel.json
+- **Deploy Command**: `vercel --prod` or connect GitHub repo
+- **Configuration**: Use vercel.json for custom settings
+
 ## API Timeout Handling
 - **Netlify Free Tier**: 10 second function timeout limit
 - **Netlify Pro**: 26 second function timeout limit
+- **Vercel Free**: 10 second timeout, but better function optimization
+- **Vercel Pro**: 60 second timeout
 - Set `maxDuration` in API routes (we use 60s but it's capped by plan)
 - OpenAI API timeouts:
   - Parsing (GPT-3.5): 25 seconds

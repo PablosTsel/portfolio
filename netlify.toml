@@ -3,9 +3,10 @@
   publish = ".next"
 
 [functions]
-  # Set timeout for all functions to 60 seconds (max allowed on free tier is 10s, pro is 26s)
-  # For Netlify Pro/Business, you can increase this
-  included_files = ["**"]
+  # Optimize for function size
+  external_node_modules = ["@next/swc-linux-x64-gnu", "@next/swc-linux-x64-musl"]
+  included_files = ["!node_modules/**", "node_modules/mammoth/**", "node_modules/openai/**", "node_modules/firebase/**"]
+  node_bundler = "nft"
   
 [[plugins]]
   package = "@netlify/plugin-nextjs"
@@ -16,4 +17,10 @@
   [headers.values]
     Access-Control-Allow-Origin = "*"
     Access-Control-Allow-Methods = "GET, POST, OPTIONS"
-    Access-Control-Allow-Headers = "Content-Type" 
+    Access-Control-Allow-Headers = "Content-Type"
+
+# Redirect rules
+[[redirects]]
+  from = "/api/*"
+  to = "/.netlify/functions/:splat"
+  status = 200 

@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
         });
         
         const imageTimeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Image generation timeout')), 20000)
+          setTimeout(() => reject(new Error('Image generation timeout')), 50000)
         );
         
         const imageResponse = await Promise.race([imageGenerationPromise, imageTimeoutPromise]) as Response;

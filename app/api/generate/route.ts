@@ -69,10 +69,10 @@ export async function POST(request: NextRequest) {
       console.log('Step 2: Parsing CV information with AI...');
       const informationParser = new InformationParserAgent(openaiApiKey);
       
-      // Add timeout wrapper - reduced to 20 seconds for faster response
+      // Add timeout wrapper - increased to 35 seconds
       const parsePromise = informationParser.parseCV(cvText);
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('OpenAI API timeout - parsing stage')), 20000)
+        setTimeout(() => reject(new Error('OpenAI API timeout - parsing stage')), 35000)
       );
       
       const parsedCV = await Promise.race([parsePromise, timeoutPromise]) as any;
@@ -84,21 +84,21 @@ export async function POST(request: NextRequest) {
       
       let portfolioContent;
       try {
-        // Add timeout wrapper for content generation - reduced to 25 seconds for GPT-4
-        const contentPromise = contentGenerator.generateContent(parsedCV);
-        const contentTimeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Content generation timeout - GPT-4 is taking too long')), 25000)
-        );
-        
+        // Add timeout wrapper for content generation - increased to 40 seconds for GPT-4
+      const contentPromise = contentGenerator.generateContent(parsedCV);
+      const contentTimeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Content generation timeout - GPT-4 is taking too long')), 40000)
+      );
+      
         portfolioContent = await Promise.race([contentPromise, contentTimeoutPromise]) as any;
         console.log('Portfolio content generated with GPT-4');
       } catch (contentError) {
         console.log('GPT-4 timed out, falling back to GPT-3.5...');
         try {
-          // Fallback to GPT-3.5 which is faster - reduced to 15 seconds
+          // Fallback to GPT-3.5 which is faster
           const fallbackPromise = contentGenerator.generateContentFallback(parsedCV);
           const fallbackTimeoutPromise = new Promise((_, reject) => 
-            setTimeout(() => reject(new Error('Fallback content generation timeout')), 15000)
+            setTimeout(() => reject(new Error('Fallback content generation timeout')), 25000)
           );
           
           portfolioContent = await Promise.race([fallbackPromise, fallbackTimeoutPromise]) as any;
@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
       // Step 4: Generate images for projects
       console.log('Step 4: Generating images for projects...');
       try {
-        // Add timeout wrapper for image generation - reduced to 15 seconds
+        // Add timeout wrapper for image generation - 20 seconds
         const imageGenerationPromise = fetch(`${request.url.replace('/generate', '/generate-images')}`, {
           method: 'POST',
           headers: {
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
         });
         
         const imageTimeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Image generation timeout after 15 seconds')), 15000)
+          setTimeout(() => reject(new Error('Image generation timeout')), 20000)
         );
         
         const imageResponse = await Promise.race([imageGenerationPromise, imageTimeoutPromise]) as Response;
@@ -141,15 +141,10 @@ export async function POST(request: NextRequest) {
           portfolioContent.projects = projectsWithImages;
           console.log('Project images generated successfully');
         } else {
-          console.error('Failed to generate images, response status:', imageResponse.status);
-          console.error('Image generation response text:', await imageResponse.text().catch(() => 'Could not read response'));
+          console.error('Failed to generate images, continuing without them');
         }
       } catch (imageError) {
         console.error('Error generating images:', imageError);
-        console.error('Image generation error details:', {
-          message: imageError instanceof Error ? imageError.message : 'Unknown error',
-          stack: imageError instanceof Error ? imageError.stack : 'No stack'
-        });
         // Continue without images if generation fails
       }
 

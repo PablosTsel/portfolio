@@ -179,7 +179,26 @@
   - Content Generation (GPT-4): 30 seconds
 - **Fallback Strategy**: If GPT-4 times out, automatically fallback to GPT-3.5
 - Create `netlify.toml` for proper configuration
-- In development, timeouts are less strict 
+- In development, timeouts are less strict
+
+## Successful Vercel Deployment (Current Configuration)
+- **Platform**: Vercel (Recommended over Netlify for this project)
+- **Build Command**: `npm run build`
+- **Output Directory**: `.next`
+- **Function Limits**: 60s timeout configured in `vercel.json`
+- **Environment Variables**: All properly configured in Vercel dashboard
+  - `OPENAI_API_KEY` (actual key, not placeholder)
+  - All `NEXT_PUBLIC_FIREBASE_*` variables
+  - Firebase Admin credentials for server-side operations
+
+## Image Generation API (Fixed and Working)
+- **Route**: `/api/generate-images` with enhanced error handling
+- **DALL-E Integration**: Uses GPT-3.5 for prompt generation + DALL-E-3 for images
+- **Timeout Protection**: 25s for DALL-E generation, 15s for image download
+- **Fallback Strategy**: Returns placeholder images if generation fails
+- **Detailed Logging**: Console logs with emojis for easier debugging (🖼️ 📊 ✅ ❌)
+- **Error Recovery**: Continues processing other images if one fails
+- **Base64 Conversion**: Images converted for Firebase Storage upload
 
 ## Deployment Best Practices Learned
 - Always verify environment variables in deployment dashboard
@@ -187,17 +206,4 @@
 - Implement comprehensive error handling with fallback placeholders
 - Add detailed logging for debugging production issues
 - Test timeout scenarios during development
-- Use Promise.race() for timeout protection on external API calls
-
-## Image Generation Troubleshooting
-- **Silent Failures**: Image generation can fail silently - check Vercel Function logs, not browser console
-- **Timeout Issues**: Default 20s timeout may be too short for DALL-E API - increased to 30s
-- **Custom Domain Issues**: Image generation API may work on vercel.app but fail on custom domains
-- **Environment Variables**: Custom domains may not inherit OpenAI API key properly
-- **Debugging Steps**:
-  1. Check Vercel Dashboard → Functions → Look for `/api/generate` logs
-  2. Test `/api/test-env` on custom domain vs vercel.app domain
-  3. Test image generation API directly: `/api/generate-images`
-  4. Verify OpenAI API key is accessible in production environment
-- **Fallback Behavior**: Portfolio generation continues without images if generation fails
-- **Error Logging**: Enhanced error logging in `/api/generate` for better debugging 
+- Use Promise.race() for timeout protection on external API calls 

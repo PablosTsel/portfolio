@@ -984,7 +984,7 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
                       if (reportButton) {
                         const wasExisting = !!existingReport;
                         reportButton.innerHTML = \`
-                          <i class="fas fa-file-alt"></i>
+                            <i class="fas fa-file-alt"></i>
                           Report \${wasExisting ? 'Modified' : 'Added'} ✓
                         \`;
                         reportButton.style.borderColor = '#10b981';
@@ -1030,10 +1030,10 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
                     
                     // Add new GitHub link
                     linksContainer.insertAdjacentHTML('beforeend', \`
-                      <a href="\${url}" target="_blank" class="project-link github">
-                        <i class="fab fa-github"></i>
-                        View Code
-                      </a>
+                        <a href="\${url}" target="_blank" class="project-link github">
+                          <i class="fab fa-github"></i>
+                          View Code
+                        </a>
                     \`);
                     
                     // Also update the edit button to show it's been added
@@ -1071,13 +1071,13 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
                   const buttonsHtml = \`
                     <div class="project-edit-buttons">
                       <button class="add-link-btn report\${hasReport ? ' modify' : ''}" onclick="window.addReport(this.closest('.project-card'))" title="\${hasReport ? 'Modify PDF report' : 'Add PDF report'}">
-                        <i class="fas fa-file-alt"></i>
+                          <i class="fas fa-file-alt"></i>
                         \${hasReport ? 'Modify Report' : 'Add Report'}
-                      </button>
+                        </button>
                       <button class="add-link-btn github\${hasGitHub ? ' modify' : ''}" onclick="window.addGitHub(this.closest('.project-card'))" title="\${hasGitHub ? 'Modify GitHub repository' : 'Add GitHub repository'}">
-                        <i class="fab fa-github"></i>
+                          <i class="fab fa-github"></i>
                         \${hasGitHub ? 'Modify Code' : 'Add GitHub'}
-                      </button>
+                        </button>
                     </div>
                   \`;
                   
@@ -2062,7 +2062,7 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
                       if (reportButton) {
                         const wasExisting = !!existingReport;
                         reportButton.innerHTML = \`
-                          <i class="fas fa-file-alt"></i>
+                            <i class="fas fa-file-alt"></i>
                           Report \${wasExisting ? 'Modified' : 'Added'} ✓
                         \`;
                         reportButton.style.borderColor = '#10b981';
@@ -2108,10 +2108,10 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
                     
                     // Add new GitHub link
                     linksContainer.insertAdjacentHTML('beforeend', \`
-                      <a href="\${url}" target="_blank" class="project-link github">
-                        <i class="fab fa-github"></i>
-                        View Code
-                      </a>
+                        <a href="\${url}" target="_blank" class="project-link github">
+                          <i class="fab fa-github"></i>
+                          View Code
+                        </a>
                     \`);
                     
                     // Also update the edit button to show it's been added
@@ -2149,13 +2149,13 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
                   const buttonsHtml = \`
                     <div class="project-edit-buttons">
                       <button class="add-link-btn report\${hasReport ? ' modify' : ''}" onclick="window.addReport(this.closest('.project-card'))" title="\${hasReport ? 'Modify PDF report' : 'Add PDF report'}">
-                        <i class="fas fa-file-alt"></i>
+                          <i class="fas fa-file-alt"></i>
                         \${hasReport ? 'Modify Report' : 'Add Report'}
-                      </button>
+                        </button>
                       <button class="add-link-btn github\${hasGitHub ? ' modify' : ''}" onclick="window.addGitHub(this.closest('.project-card'))" title="\${hasGitHub ? 'Modify GitHub repository' : 'Add GitHub repository'}">
-                        <i class="fab fa-github"></i>
+                          <i class="fab fa-github"></i>
                         \${hasGitHub ? 'Modify Code' : 'Add GitHub'}
-                      </button>
+                        </button>
                     </div>
                   \`;
                   

@@ -183,7 +183,7 @@ Return in JSON format:
       .join('')
       .toUpperCase()
       .slice(0, 2);
-
+      
     // Same prompt as main method but will use GPT-3.5
     const prompt = `Based on this person's CV information, create engaging web portfolio content.
 
@@ -241,46 +241,46 @@ Return in JSON format:
     try {
       const response = await this.openai.chat.completions.create({
         model: 'gpt-3.5-turbo', // Using GPT-3.5 for faster fallback generation
-        messages: [
-          {
-            role: 'system',
+          messages: [
+            {
+              role: 'system',
             content: 'You are a professional portfolio content writer. Your #1 priority is to follow word count limits EXACTLY. Count every single word before responding. If a section requires 130-150 words, it must have AT LEAST 130 words and NO MORE than 150 words. If you provide fewer words than requested, you have FAILED the task. Create engaging, authentic content that sounds natural and professional while strictly adhering to word count requirements.'
-          },
-          {
-            role: 'user',
-            content: prompt
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 1500
-      });
+            },
+            {
+              role: 'user',
+              content: prompt
+            }
+          ],
+          temperature: 0.7,
+          max_tokens: 1500
+        });
 
       const content = response.choices[0].message.content || '{}';
-      
-      // Clean up the response to ensure valid JSON
+        
+        // Clean up the response to ensure valid JSON
       let jsonStr = content;
       if (content.includes('```json')) {
         jsonStr = content.split('```json')[1].split('```')[0].trim();
       } else if (content.includes('```')) {
         jsonStr = content.split('```')[1].split('```')[0].trim();
-      }
+        }
 
-      const generated = JSON.parse(jsonStr);
+        const generated = JSON.parse(jsonStr);
 
-      // Merge enhanced projects with original project data
-      const enhancedProjects = parsedCV.projects?.map((project, index) => {
-        const enhanced = generated.enhancedProjects?.[index];
-        return {
-          ...project,
-          description: enhanced?.description || project.description,
+        // Merge enhanced projects with original project data
+        const enhancedProjects = parsedCV.projects?.map((project, index) => {
+          const enhanced = generated.enhancedProjects?.[index];
+          return {
+            ...project,
+            description: enhanced?.description || project.description,
           imageUrl: '', // Will be filled by user later
           githubUrl: '', // Will be filled by user later
           reportUrl: '' // Will be filled by user later
-        };
-      }) || [];
+          };
+        }) || [];
 
-      // If no projects exist, create some from experience or skills
-      if (enhancedProjects.length === 0) {
+        // If no projects exist, create some from experience or skills
+        if (enhancedProjects.length === 0) {
         // Generate exactly 3 sample projects based on skills
         const sampleProjects = generated.enhancedProjects?.slice(0, 3).map((project: any) => ({
           name: project.name,
@@ -289,17 +289,17 @@ Return in JSON format:
           githubUrl: '', // Will be filled by user later
           reportUrl: '' // Will be filled by user later
         })) || [];
-
+          
         enhancedProjects.push(...sampleProjects);
-      }
+        }
 
-      return {
-        ...parsedCV,
-        initials,
+        return {
+          ...parsedCV,
+          initials,
         smallIntro: generated.smallIntro || `${parsedCV.title} with expertise in various technologies`,
         about: generated.about || `Hello! I'm ${parsedCV.fullName}, a passionate ${parsedCV.title} with experience in ${parsedCV.skills.slice(0, 3).map(s => s.name).join(', ')}.`,
-        projects: enhancedProjects
-      };
+          projects: enhancedProjects
+        };
     } catch (error) {
       console.error('Error generating fallback content:', error);
       throw new Error('Failed to generate portfolio content with fallback model');

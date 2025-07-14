@@ -77,7 +77,7 @@ export default function GeneratePage() {
       formData.append('file', file);
       formData.append('userId', user.uid);
 
-      const response = await fetch('/api/generate', {
+      const response = await fetch('/api/generate/', {
         method: 'POST',
         body: formData,
       });

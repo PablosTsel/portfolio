@@ -116,7 +116,7 @@ export async function POST(request: NextRequest) {
       // Step 4: Generate images for projects
       console.log('Step 4: Generating images for projects...');
       try {
-        // Add timeout wrapper for image generation - 20 seconds
+        // Add timeout wrapper for image generation - increased to 30 seconds
         const imageGenerationPromise = fetch(`${request.url.replace('/generate', '/generate-images')}`, {
           method: 'POST',
           headers: {
@@ -130,7 +130,7 @@ export async function POST(request: NextRequest) {
         });
         
         const imageTimeoutPromise = new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Image generation timeout')), 20000)
+          setTimeout(() => reject(new Error('Image generation timeout after 30 seconds')), 30000)
         );
         
         const imageResponse = await Promise.race([imageGenerationPromise, imageTimeoutPromise]) as Response;
@@ -141,10 +141,15 @@ export async function POST(request: NextRequest) {
           portfolioContent.projects = projectsWithImages;
           console.log('Project images generated successfully');
         } else {
-          console.error('Failed to generate images, continuing without them');
+          console.error('Failed to generate images, response status:', imageResponse.status);
+          console.error('Image generation response text:', await imageResponse.text().catch(() => 'Could not read response'));
         }
       } catch (imageError) {
         console.error('Error generating images:', imageError);
+        console.error('Image generation error details:', {
+          message: imageError instanceof Error ? imageError.message : 'Unknown error',
+          stack: imageError instanceof Error ? imageError.stack : 'No stack'
+        });
         // Continue without images if generation fails
       }
 

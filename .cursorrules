@@ -180,3 +180,24 @@
 - **Fallback Strategy**: If GPT-4 times out, automatically fallback to GPT-3.5
 - Create `netlify.toml` for proper configuration
 - In development, timeouts are less strict 
+
+## Deployment Best Practices Learned
+- Always verify environment variables in deployment dashboard
+- Use proper `maxDuration` settings in `vercel.json` for API routes
+- Implement comprehensive error handling with fallback placeholders
+- Add detailed logging for debugging production issues
+- Test timeout scenarios during development
+- Use Promise.race() for timeout protection on external API calls
+
+## Image Generation Troubleshooting
+- **Silent Failures**: Image generation can fail silently - check Vercel Function logs, not browser console
+- **Timeout Issues**: Default 20s timeout may be too short for DALL-E API - increased to 30s
+- **Custom Domain Issues**: Image generation API may work on vercel.app but fail on custom domains
+- **Environment Variables**: Custom domains may not inherit OpenAI API key properly
+- **Debugging Steps**:
+  1. Check Vercel Dashboard → Functions → Look for `/api/generate` logs
+  2. Test `/api/test-env` on custom domain vs vercel.app domain
+  3. Test image generation API directly: `/api/generate-images`
+  4. Verify OpenAI API key is accessible in production environment
+- **Fallback Behavior**: Portfolio generation continues without images if generation fails
+- **Error Logging**: Enhanced error logging in `/api/generate` for better debugging 

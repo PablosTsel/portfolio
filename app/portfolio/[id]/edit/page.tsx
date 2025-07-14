@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Loader2, Save } from 'lucide-react';
 import { use } from 'react';
-import { ref, getDownloadURL, uploadString } from 'firebase/storage';
+import { ref, getDownloadURL, uploadString, uploadBytes } from 'firebase/storage';
 import { storage, db } from '@/lib/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '@/lib/auth';
@@ -484,6 +484,140 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
                 .delete-skill-btn, .delete-project-btn {
                   display: none !important;
                 }
+                
+                /* Project edit buttons - ONLY for editing mode */
+                .editing-mode .project-card {
+                  position: relative;
+                  padding-bottom: 60px !important; /* Add space for buttons */
+                }
+                
+                .editing-mode .project-edit-buttons {
+                  position: absolute;
+                  bottom: 20px;
+                  left: 1.5rem;
+                  right: 1.5rem;
+                  display: flex !important;
+                  gap: 1rem;
+                  z-index: 100;
+                }
+                
+                .editing-mode .add-link-btn {
+                  flex: 1;
+                  padding: 8px 12px;
+                  border-radius: 8px;
+                  border: 2px dashed;
+                  background: transparent;
+                  cursor: pointer;
+                  font-size: 14px;
+                  font-weight: 500;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 6px;
+                  transition: all 0.3s ease;
+                  min-height: 36px;
+                }
+                
+                .editing-mode .add-link-btn.report {
+                  border-color: #3b82f6;
+                  color: #3b82f6;
+                  background-color: rgba(59, 130, 246, 0.05);
+                }
+                
+                .editing-mode .add-link-btn.report:hover {
+                  background-color: rgba(59, 130, 246, 0.1);
+                  border-color: #2563eb;
+                  color: #2563eb;
+                  transform: translateY(-1px);
+                  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+                }
+                
+                .editing-mode .add-link-btn.github {
+                  border-color: #9333ea;
+                  color: #9333ea;
+                  background-color: rgba(147, 51, 234, 0.05);
+                }
+                
+                .editing-mode .add-link-btn.github:hover {
+                  background-color: rgba(147, 51, 234, 0.1);
+                  border-color: #7c3aed;
+                  color: #7c3aed;
+                  transform: translateY(-1px);
+                  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.2);
+                }
+                
+                /* Modify buttons have solid borders instead of dashed */
+                .editing-mode .add-link-btn.modify {
+                  border-style: solid !important;
+                }
+                
+                /* Project links in final portfolio */
+                .project-links {
+                  position: absolute;
+                  bottom: 20px;
+                  left: 1.5rem;
+                  right: 1.5rem;
+                  display: flex;
+                  gap: 1rem;
+                  z-index: 100;
+                }
+                
+                .project-link {
+                  flex: 1;
+                  padding: 8px 12px;
+                  border-radius: 8px;
+                  text-decoration: none;
+                  font-size: 14px;
+                  font-weight: 500;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 6px;
+                  transition: all 0.3s ease;
+                  min-height: 36px;
+                  color: white;
+                }
+                
+                .project-link.report {
+                  background-color: #3b82f6;
+                }
+                
+                .project-link.report:hover {
+                  background-color: #2563eb;
+                  transform: translateY(-1px);
+                  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+                }
+                
+                .project-link.github {
+                  background-color: #9333ea;
+                }
+                
+                .project-link.github:hover {
+                  background-color: #7c3aed;
+                  transform: translateY(-1px);
+                  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
+                }
+                
+                /* Hide project edit buttons when not in editing mode */
+                .project-edit-buttons {
+                  display: none !important;
+                }
+                
+                /* Hide existing project links when in editing mode */
+                .editing-mode .project-links {
+                  display: none !important;
+                }
+                
+                /* Ensure project cards have proper spacing for links */
+                .project-card {
+                  position: relative; /* Ensure project links are positioned relative to the card */
+                  padding-bottom: 80px; /* Space for links in final portfolio */
+                }
+                
+                /* Font Awesome icons - ensure they're loaded */
+                .fa, .fas, .fab {
+                  font-family: "Font Awesome 5 Free", "Font Awesome 5 Brands";
+                }
               </style>
             `;
             
@@ -607,6 +741,9 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
                     
                     // Add delete button to the new project
                     window.addDeleteButtonToProject(newProjectCard);
+                    
+                    // Add edit buttons to the new project
+                    window.addEditButtonsToProject(newProjectCard);
                     
                     // Scroll to the new card
                     newProjectCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -742,6 +879,7 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
                     const existingProjects = document.querySelectorAll('.project-card');
                     existingProjects.forEach(function(projectCard) {
                       window.addDeleteButtonToProject(projectCard);
+                      window.addEditButtonsToProject(projectCard);
                     });
                     
                     // Add the Add Skill button
@@ -783,12 +921,177 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
                     }
                   }, 100);
                 });
+                
+                // Delete project function
+                window.deleteProject = function(projectCard) {
+                  if (confirm('Are you sure you want to delete this project?')) {
+                    projectCard.remove();
+                  }
+                };
+                
+                // Store for pending file uploads
+                window.pendingUploads = window.pendingUploads || [];
+                
+                // Add report function
+                window.addReport = function(projectCard) {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = '.pdf';
+                  input.onchange = function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                      if (file.type !== 'application/pdf') {
+                        alert('Please select a PDF file.');
+                        return;
+                      }
+                      
+                      // Store file for upload when saving
+                      const projectId = projectCard.id || 'project-' + Date.now();
+                      projectCard.id = projectId;
+                      
+                      window.pendingUploads.push({
+                        type: 'report',
+                        file: file,
+                        projectId: projectId
+                      });
+                      
+                      // Update or create the project-links container
+                      let linksContainer = projectCard.querySelector('.project-links');
+                      if (!linksContainer) {
+                        linksContainer = document.createElement('div');
+                        linksContainer.className = 'project-links';
+                        projectCard.appendChild(linksContainer);
+                      }
+                      
+                      // Remove existing report link if any
+                      const existingReport = linksContainer.querySelector('.report');
+                      if (existingReport) {
+                        existingReport.remove();
+                      }
+                      
+                      // Add new report link
+                      linksContainer.insertAdjacentHTML('beforeend', \`
+                        <div class="project-link report" data-pending="true">
+                          <i class="fas fa-file-alt"></i>
+                          View Report
+                        </div>
+                      \`);
+                      
+                      // Also update the edit button to show it's been added
+                      const buttonsContainer = projectCard.querySelector('.project-edit-buttons');
+                      const reportButton = buttonsContainer ? buttonsContainer.querySelector('.add-link-btn.report') : null;
+                      
+                      if (reportButton) {
+                        const wasExisting = !!existingReport;
+                        reportButton.innerHTML = \`
+                          <i class="fas fa-file-alt"></i>
+                          Report \${wasExisting ? 'Modified' : 'Added'} ✓
+                        \`;
+                        reportButton.style.borderColor = '#10b981';
+                        reportButton.style.color = '#10b981';
+                        reportButton.disabled = true;
+                      }
+                      
+                      console.log('Report file added:', file.name);
+                    }
+                  };
+                  input.click();
+                };
+                
+                // Add GitHub function
+                window.addGitHub = function(projectCard) {
+                  // Check if modifying existing GitHub link
+                  const existingLinks = projectCard.querySelector('.project-links');
+                  const existingGitHub = existingLinks ? existingLinks.querySelector('.github') : null;
+                  const isModifying = !!existingGitHub;
+                  
+                  const url = prompt(isModifying ? 'Enter new GitHub repository URL:' : 'Enter GitHub repository URL:');
+                  if (url) {
+                    // Basic GitHub URL validation
+                    const githubRegex = /^https?:\\/\\/(www\\.)?github\\.com\\/[a-zA-Z0-9_-]+\\/[a-zA-Z0-9_-]+\\/?$/;
+                    if (!githubRegex.test(url)) {
+                      alert('Please enter a valid GitHub repository URL (e.g., https://github.com/username/repository)');
+                      return;
+                    }
+                    
+                    // Update or create the project-links container
+                    let linksContainer = projectCard.querySelector('.project-links');
+                    if (!linksContainer) {
+                      linksContainer = document.createElement('div');
+                      linksContainer.className = 'project-links';
+                      projectCard.appendChild(linksContainer);
+                    }
+                    
+                    // Remove existing GitHub link if any
+                    const existingGitHub = linksContainer.querySelector('.github');
+                    if (existingGitHub) {
+                      existingGitHub.remove();
+                    }
+                    
+                    // Add new GitHub link
+                    linksContainer.insertAdjacentHTML('beforeend', \`
+                      <a href="\${url}" target="_blank" class="project-link github">
+                        <i class="fab fa-github"></i>
+                        View Code
+                      </a>
+                    \`);
+                    
+                    // Also update the edit button to show it's been added
+                    const buttonsContainer = projectCard.querySelector('.project-edit-buttons');
+                    const githubButton = buttonsContainer ? buttonsContainer.querySelector('.add-link-btn.github') : null;
+                    
+                    if (githubButton) {
+                      githubButton.innerHTML = \`
+                        <i class="fab fa-github"></i>
+                        GitHub \${isModifying ? 'Modified' : 'Added'} ✓
+                      \`;
+                      githubButton.style.borderColor = '#10b981';
+                      githubButton.style.color = '#10b981';
+                      githubButton.disabled = true;
+                    }
+                    
+                    console.log('GitHub URL added:', url);
+                  }
+                };
+                
+                // Add edit buttons to project
+                window.addEditButtonsToProject = function(projectCard) {
+                  // Don't add if it already has them
+                  if (projectCard.querySelector('.project-edit-buttons')) {
+                    return;
+                  }
+                  
+                  // Check if project already has links (they're hidden but still in DOM)
+                  const existingLinks = projectCard.querySelector('.project-links');
+                  const hasReport = existingLinks && existingLinks.querySelector('.report');
+                  const hasGitHub = existingLinks && existingLinks.querySelector('.github');
+                  
+                  // In edit mode, always show Add/Modify buttons
+                  // The existing project-links are hidden by CSS in editing mode
+                  const buttonsHtml = \`
+                    <div class="project-edit-buttons">
+                      <button class="add-link-btn report\${hasReport ? ' modify' : ''}" onclick="window.addReport(this.closest('.project-card'))" title="\${hasReport ? 'Modify PDF report' : 'Add PDF report'}">
+                        <i class="fas fa-file-alt"></i>
+                        \${hasReport ? 'Modify Report' : 'Add Report'}
+                      </button>
+                      <button class="add-link-btn github\${hasGitHub ? ' modify' : ''}" onclick="window.addGitHub(this.closest('.project-card'))" title="\${hasGitHub ? 'Modify GitHub repository' : 'Add GitHub repository'}">
+                        <i class="fab fa-github"></i>
+                        \${hasGitHub ? 'Modify Code' : 'Add GitHub'}
+                      </button>
+                    </div>
+                  \`;
+                  
+                  projectCard.insertAdjacentHTML('beforeend', buttonsHtml);
+                };
               </script>
             `;
             
             // Inject styles, button, and script before closing body tag
             editableHtml = editableHtml.replace('</head>', saveButtonStyles + '</head>');
             editableHtml = editableHtml.replace('</body>', saveButton + uploadScript + '</body>');
+            
+            // Add Font Awesome CDN for icons
+            editableHtml = editableHtml.replace('</head>', '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"></head>');
             
             setPortfolioHtml(editableHtml);
             setLoading(false);
@@ -1259,6 +1562,140 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
                 .delete-skill-btn, .delete-project-btn {
                   display: none !important;
                 }
+                
+                /* Project edit buttons - ONLY for editing mode */
+                .editing-mode .project-card {
+                  position: relative;
+                  padding-bottom: 60px !important; /* Add space for buttons */
+                }
+                
+                .editing-mode .project-edit-buttons {
+                  position: absolute;
+                  bottom: 20px;
+                  left: 1.5rem;
+                  right: 1.5rem;
+                  display: flex !important;
+                  gap: 1rem;
+                  z-index: 100;
+                }
+                
+                .editing-mode .add-link-btn {
+                  flex: 1;
+                  padding: 8px 12px;
+                  border-radius: 8px;
+                  border: 2px dashed;
+                  background: transparent;
+                  cursor: pointer;
+                  font-size: 14px;
+                  font-weight: 500;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 6px;
+                  transition: all 0.3s ease;
+                  min-height: 36px;
+                }
+                
+                .editing-mode .add-link-btn.report {
+                  border-color: #3b82f6;
+                  color: #3b82f6;
+                  background-color: rgba(59, 130, 246, 0.05);
+                }
+                
+                .editing-mode .add-link-btn.report:hover {
+                  background-color: rgba(59, 130, 246, 0.1);
+                  border-color: #2563eb;
+                  color: #2563eb;
+                  transform: translateY(-1px);
+                  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+                }
+                
+                .editing-mode .add-link-btn.github {
+                  border-color: #9333ea;
+                  color: #9333ea;
+                  background-color: rgba(147, 51, 234, 0.05);
+                }
+                
+                .editing-mode .add-link-btn.github:hover {
+                  background-color: rgba(147, 51, 234, 0.1);
+                  border-color: #7c3aed;
+                  color: #7c3aed;
+                  transform: translateY(-1px);
+                  box-shadow: 0 2px 8px rgba(147, 51, 234, 0.2);
+                }
+                
+                /* Modify buttons have solid borders instead of dashed */
+                .editing-mode .add-link-btn.modify {
+                  border-style: solid !important;
+                }
+                
+                /* Project links in final portfolio */
+                .project-links {
+                  position: absolute;
+                  bottom: 20px;
+                  left: 1.5rem;
+                  right: 1.5rem;
+                  display: flex;
+                  gap: 1rem;
+                  z-index: 100;
+                }
+                
+                .project-link {
+                  flex: 1;
+                  padding: 8px 12px;
+                  border-radius: 8px;
+                  text-decoration: none;
+                  font-size: 14px;
+                  font-weight: 500;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  gap: 6px;
+                  transition: all 0.3s ease;
+                  min-height: 36px;
+                  color: white;
+                }
+                
+                .project-link.report {
+                  background-color: #3b82f6;
+                }
+                
+                .project-link.report:hover {
+                  background-color: #2563eb;
+                  transform: translateY(-1px);
+                  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+                }
+                
+                .project-link.github {
+                  background-color: #9333ea;
+                }
+                
+                .project-link.github:hover {
+                  background-color: #7c3aed;
+                  transform: translateY(-1px);
+                  box-shadow: 0 4px 12px rgba(147, 51, 234, 0.3);
+                }
+                
+                /* Hide project edit buttons when not in editing mode */
+                .project-edit-buttons {
+                  display: none !important;
+                }
+                
+                /* Hide existing project links when in editing mode */
+                .editing-mode .project-links {
+                  display: none !important;
+                }
+                
+                /* Ensure project cards have proper spacing for links */
+                .project-card {
+                  position: relative; /* Ensure project links are positioned relative to the card */
+                  padding-bottom: 80px; /* Space for links in final portfolio */
+                }
+                
+                /* Font Awesome icons - ensure they're loaded */
+                .fa, .fas, .fab {
+                  font-family: "Font Awesome 5 Free", "Font Awesome 5 Brands";
+                }
               </style>
             `;
             
@@ -1382,6 +1819,9 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
                     
                     // Add delete button to the new project
                     window.addDeleteButtonToProject(newProjectCard);
+                    
+                    // Add edit buttons to the new project
+                    window.addEditButtonsToProject(newProjectCard);
                     
                     // Scroll to the new card
                     newProjectCard.scrollIntoView({ behavior: 'smooth', block: 'center' });
@@ -1517,6 +1957,7 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
                     const existingProjects = document.querySelectorAll('.project-card');
                     existingProjects.forEach(function(projectCard) {
                       window.addDeleteButtonToProject(projectCard);
+                      window.addEditButtonsToProject(projectCard);
                     });
                     
                     // Add the Add Skill button
@@ -1558,12 +1999,177 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
                     }
                   }, 100);
                 });
+                
+                // Delete project function
+                window.deleteProject = function(projectCard) {
+                  if (confirm('Are you sure you want to delete this project?')) {
+                    projectCard.remove();
+                  }
+                };
+                
+                // Store for pending file uploads
+                window.pendingUploads = window.pendingUploads || [];
+                
+                // Add report function
+                window.addReport = function(projectCard) {
+                  const input = document.createElement('input');
+                  input.type = 'file';
+                  input.accept = '.pdf';
+                  input.onchange = function(e) {
+                    const file = e.target.files[0];
+                    if (file) {
+                      if (file.type !== 'application/pdf') {
+                        alert('Please select a PDF file.');
+                        return;
+                      }
+                      
+                      // Store file for upload when saving
+                      const projectId = projectCard.id || 'project-' + Date.now();
+                      projectCard.id = projectId;
+                      
+                      window.pendingUploads.push({
+                        type: 'report',
+                        file: file,
+                        projectId: projectId
+                      });
+                      
+                      // Update or create the project-links container
+                      let linksContainer = projectCard.querySelector('.project-links');
+                      if (!linksContainer) {
+                        linksContainer = document.createElement('div');
+                        linksContainer.className = 'project-links';
+                        projectCard.appendChild(linksContainer);
+                      }
+                      
+                      // Remove existing report link if any
+                      const existingReport = linksContainer.querySelector('.report');
+                      if (existingReport) {
+                        existingReport.remove();
+                      }
+                      
+                      // Add new report link
+                      linksContainer.insertAdjacentHTML('beforeend', \`
+                        <div class="project-link report" data-pending="true">
+                          <i class="fas fa-file-alt"></i>
+                          View Report
+                        </div>
+                      \`);
+                      
+                      // Also update the edit button to show it's been added
+                      const buttonsContainer = projectCard.querySelector('.project-edit-buttons');
+                      const reportButton = buttonsContainer ? buttonsContainer.querySelector('.add-link-btn.report') : null;
+                      
+                      if (reportButton) {
+                        const wasExisting = !!existingReport;
+                        reportButton.innerHTML = \`
+                          <i class="fas fa-file-alt"></i>
+                          Report \${wasExisting ? 'Modified' : 'Added'} ✓
+                        \`;
+                        reportButton.style.borderColor = '#10b981';
+                        reportButton.style.color = '#10b981';
+                        reportButton.disabled = true;
+                      }
+                      
+                      console.log('Report file added:', file.name);
+                    }
+                  };
+                  input.click();
+                };
+                
+                // Add GitHub function
+                window.addGitHub = function(projectCard) {
+                  // Check if modifying existing GitHub link
+                  const existingLinks = projectCard.querySelector('.project-links');
+                  const existingGitHub = existingLinks ? existingLinks.querySelector('.github') : null;
+                  const isModifying = !!existingGitHub;
+                  
+                  const url = prompt(isModifying ? 'Enter new GitHub repository URL:' : 'Enter GitHub repository URL:');
+                  if (url) {
+                    // Basic GitHub URL validation
+                    const githubRegex = /^https?:\\/\\/(www\\.)?github\\.com\\/[a-zA-Z0-9_-]+\\/[a-zA-Z0-9_-]+\\/?$/;
+                    if (!githubRegex.test(url)) {
+                      alert('Please enter a valid GitHub repository URL (e.g., https://github.com/username/repository)');
+                      return;
+                    }
+                    
+                    // Update or create the project-links container
+                    let linksContainer = projectCard.querySelector('.project-links');
+                    if (!linksContainer) {
+                      linksContainer = document.createElement('div');
+                      linksContainer.className = 'project-links';
+                      projectCard.appendChild(linksContainer);
+                    }
+                    
+                    // Remove existing GitHub link if any
+                    const existingGitHub = linksContainer.querySelector('.github');
+                    if (existingGitHub) {
+                      existingGitHub.remove();
+                    }
+                    
+                    // Add new GitHub link
+                    linksContainer.insertAdjacentHTML('beforeend', \`
+                      <a href="\${url}" target="_blank" class="project-link github">
+                        <i class="fab fa-github"></i>
+                        View Code
+                      </a>
+                    \`);
+                    
+                    // Also update the edit button to show it's been added
+                    const buttonsContainer = projectCard.querySelector('.project-edit-buttons');
+                    const githubButton = buttonsContainer ? buttonsContainer.querySelector('.add-link-btn.github') : null;
+                    
+                    if (githubButton) {
+                      githubButton.innerHTML = \`
+                        <i class="fab fa-github"></i>
+                        GitHub \${isModifying ? 'Modified' : 'Added'} ✓
+                      \`;
+                      githubButton.style.borderColor = '#10b981';
+                      githubButton.style.color = '#10b981';
+                      githubButton.disabled = true;
+                    }
+                    
+                    console.log('GitHub URL added:', url);
+                  }
+                };
+                
+                // Add edit buttons to project
+                window.addEditButtonsToProject = function(projectCard) {
+                  // Don't add if it already has them
+                  if (projectCard.querySelector('.project-edit-buttons')) {
+                    return;
+                  }
+                  
+                  // Check if project already has links (they're hidden but still in DOM)
+                  const existingLinks = projectCard.querySelector('.project-links');
+                  const hasReport = existingLinks && existingLinks.querySelector('.report');
+                  const hasGitHub = existingLinks && existingLinks.querySelector('.github');
+                  
+                  // In edit mode, always show Add/Modify buttons
+                  // The existing project-links are hidden by CSS in editing mode
+                  const buttonsHtml = \`
+                    <div class="project-edit-buttons">
+                      <button class="add-link-btn report\${hasReport ? ' modify' : ''}" onclick="window.addReport(this.closest('.project-card'))" title="\${hasReport ? 'Modify PDF report' : 'Add PDF report'}">
+                        <i class="fas fa-file-alt"></i>
+                        \${hasReport ? 'Modify Report' : 'Add Report'}
+                      </button>
+                      <button class="add-link-btn github\${hasGitHub ? ' modify' : ''}" onclick="window.addGitHub(this.closest('.project-card'))" title="\${hasGitHub ? 'Modify GitHub repository' : 'Add GitHub repository'}">
+                        <i class="fab fa-github"></i>
+                        \${hasGitHub ? 'Modify Code' : 'Add GitHub'}
+                      </button>
+                    </div>
+                  \`;
+                  
+                  projectCard.insertAdjacentHTML('beforeend', buttonsHtml);
+                };
               </script>
             `;
             
             // Inject styles, button, and script before closing body tag
             editableHtml = editableHtml.replace('</head>', saveButtonStyles + '</head>');
             editableHtml = editableHtml.replace('</body>', saveButton + uploadScript + '</body>');
+            
+            // Add Font Awesome CDN for icons
+            editableHtml = editableHtml.replace('</head>', '<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"></head>');
             
             setPortfolioHtml(editableHtml);
             setLoading(false);
@@ -1632,6 +2238,25 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
         const deleteProjectBtns = iframeDoc.querySelectorAll('.delete-project-btn');
         deleteProjectBtns.forEach(btn => btn.remove());
         
+        // Convert project edit buttons to final project links
+        const projectEditButtons = iframeDoc.querySelectorAll('.project-edit-buttons');
+        projectEditButtons.forEach(container => {
+          // Remove only the add buttons, keep the view links
+          const addButtons = container.querySelectorAll('.add-link-btn');
+          addButtons.forEach(btn => btn.remove());
+          
+          // If there are any remaining links (View Code, View Report), convert the container to project-links
+          const remainingLinks = container.querySelectorAll('.project-link, a.project-link');
+          if (remainingLinks.length > 0) {
+            // Change class from project-edit-buttons to project-links
+            container.classList.remove('project-edit-buttons');
+            container.classList.add('project-links');
+          } else {
+            // If no links remain, remove the container entirely
+            container.remove();
+          }
+        });
+        
         // Remove ALL editing-specific CSS styles
         const styleElements = iframeDoc.querySelectorAll('style');
         styleElements.forEach(styleEl => {
@@ -1653,10 +2278,60 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
             .replace(/\.add-project-btn[^}]*}/g, '') // Remove add project button styles
             .replace(/\.add-project-btn-container[^}]*}/g, '') // Remove add button container styles
             .replace(/\.new-project-card[^}]*}/g, '') // Remove new project card styles
-            .replace(/\.add-skill-btn[^}]*}/g, ''); // Remove add skill button styles
+            .replace(/\.add-skill-btn[^}]*}/g, '') // Remove add skill button styles
+            .replace(/\.project-edit-buttons[^}]*}/g, '') // Remove project edit buttons
+            .replace(/\.add-link-btn[^}]*}/g, '') // Remove add link button styles
+            .replace(/\.delete-skill-btn[^}]*}/g, '') // Remove delete skill button styles
+            .replace(/\.delete-project-btn[^}]*}/g, ''); // Remove delete project button styles
           
           styleEl.textContent = cleanedCSS;
         });
+        
+        // Handle pending file uploads before cleaning the DOM
+        const iframe = document.getElementById('portfolio-iframe') as HTMLIFrameElement;
+        const iframeWindow = iframe.contentWindow;
+        const pendingUploads = iframeWindow ? (iframeWindow as any).pendingUploads || [] : [];
+        
+        // Upload PDF files to Firebase Storage
+        if (pendingUploads.length > 0 && user) {
+          const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
+          const { storage } = await import('@/lib/firebase');
+          
+          for (const upload of pendingUploads) {
+            if (upload.type === 'report' && upload.file) {
+              try {
+                const reportRef = ref(storage, `users/${user.uid}/portfolios/${id}/reports/${upload.projectId}.pdf`);
+                await uploadBytes(reportRef, upload.file);
+                const downloadURL = await getDownloadURL(reportRef);
+                
+                // Update the project link with the actual URL
+                const projectCard = iframeDoc.getElementById(upload.projectId);
+                if (projectCard) {
+                  const reportLink = projectCard.querySelector('.project-link.report');
+                  if (reportLink && reportLink.tagName !== 'A') {
+                    // Convert div to link
+                    reportLink.outerHTML = `
+                      <a href="${downloadURL}" target="_blank" class="project-link report">
+                        <i class="fas fa-file-alt"></i>
+                        View Report
+                      </a>
+                    `;
+                  }
+                }
+                
+                console.log('Report uploaded successfully:', downloadURL);
+              } catch (error) {
+                console.error('Error uploading report:', error);
+                // Remove the report link if upload failed
+                const projectCard = iframeDoc.getElementById(upload.projectId);
+                if (projectCard) {
+                  const reportLink = projectCard.querySelector('.project-link.report');
+                  if (reportLink) reportLink.remove();
+                }
+              }
+            }
+          }
+        }
         
         // Remove contenteditable attributes
         const editableElements = iframeDoc.querySelectorAll('[contenteditable="true"]');

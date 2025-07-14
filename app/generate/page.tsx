@@ -144,6 +144,39 @@ export default function GeneratePage() {
         }
       }
       
+      // Upload project images to Firebase Storage if provided
+      if (data.projectImages && Array.isArray(data.projectImages)) {
+        console.log('Uploading project images to Firebase Storage...');
+        
+        for (const projectImage of data.projectImages) {
+          if (projectImage.imageData && projectImage.imageData.storagePath) {
+            try {
+              // Convert base64 to bytes
+              const imageBytes = Uint8Array.from(atob(projectImage.imageData.base64), c => c.charCodeAt(0));
+              
+              // Upload to Firebase Storage
+              const imageRef = ref(storage, projectImage.imageData.storagePath);
+              await uploadBytes(imageRef, imageBytes, {
+                contentType: projectImage.imageData.mimeType,
+              });
+              
+              // Get download URL
+              const imageUrl = await getDownloadURL(imageRef);
+              console.log(`Project image uploaded: ${projectImage.name} -> ${imageUrl}`);
+              
+              // Replace the temporary DALL-E URL with the Firebase Storage URL in the HTML
+              finalPortfolioHtml = finalPortfolioHtml.replace(
+                projectImage.tempUrl,
+                imageUrl
+              );
+            } catch (imageError) {
+              console.error(`Error uploading project image ${projectImage.name}:`, imageError);
+              // Continue with other images
+            }
+          }
+        }
+      }
+      
       // Save the portfolio HTML to Firebase Storage
       if (finalPortfolioHtml) {
         const portfolioRef = ref(storage, `portfolios/${data.portfolioId}/index.html`);

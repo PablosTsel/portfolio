@@ -71,7 +71,7 @@ export function generatePortfolioHTML(props: PortfolioTemplateProps): string {
                 ${profilePictureUrl ? `
                 <img src="${profilePictureUrl}" alt="${data.fullName}" class="profile-image" onerror="this.src='https://placehold.co/400x400/4169e1/ffffff?text=${data.initials}'">
                 ` : `
-                <div class="hero-avatar">${data.initials}</div>
+                <div class="hero-avatar">👤</div>
                 `}
             </div>
         </div>
@@ -402,7 +402,7 @@ function getStyles(): string {
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 5rem;
+      font-size: 7rem;
       color: white;
       font-weight: bold;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);

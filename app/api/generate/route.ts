@@ -69,10 +69,10 @@ export async function POST(request: NextRequest) {
       console.log('Step 2: Parsing CV information with AI...');
       const informationParser = new InformationParserAgent(openaiApiKey);
       
-      // Add timeout wrapper - increased to 25 seconds
+      // Add timeout wrapper - increased to 35 seconds
       const parsePromise = informationParser.parseCV(cvText);
       const timeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('OpenAI API timeout - parsing stage')), 25000)
+        setTimeout(() => reject(new Error('OpenAI API timeout - parsing stage')), 35000)
       );
       
       const parsedCV = await Promise.race([parsePromise, timeoutPromise]) as any;
@@ -82,18 +82,71 @@ export async function POST(request: NextRequest) {
       console.log('Step 3: Generating portfolio content with GPT-4...');
       const contentGenerator = new ContentGeneratorAgent(openaiApiKey);
       
-      // Add timeout wrapper for content generation - increased to 30 seconds for GPT-4
-      const contentPromise = contentGenerator.generateContent(parsedCV);
-      const contentTimeoutPromise = new Promise((_, reject) => 
-        setTimeout(() => reject(new Error('Content generation timeout - GPT-4 is taking too long')), 30000)
-      );
-      
-      const portfolioContent = await Promise.race([contentPromise, contentTimeoutPromise]) as any;
-      console.log('Portfolio content generated');
+      let portfolioContent;
+      try {
+        // Add timeout wrapper for content generation - increased to 40 seconds for GPT-4
+        const contentPromise = contentGenerator.generateContent(parsedCV);
+        const contentTimeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Content generation timeout - GPT-4 is taking too long')), 40000)
+        );
+        
+        portfolioContent = await Promise.race([contentPromise, contentTimeoutPromise]) as any;
+        console.log('Portfolio content generated with GPT-4');
+      } catch (contentError) {
+        console.log('GPT-4 timed out, falling back to GPT-3.5...');
+        try {
+          // Fallback to GPT-3.5 which is faster
+          const fallbackPromise = contentGenerator.generateContentFallback(parsedCV);
+          const fallbackTimeoutPromise = new Promise((_, reject) => 
+            setTimeout(() => reject(new Error('Fallback content generation timeout')), 25000)
+          );
+          
+          portfolioContent = await Promise.race([fallbackPromise, fallbackTimeoutPromise]) as any;
+          console.log('Portfolio content generated with GPT-3.5 fallback');
+        } catch (fallbackError) {
+          console.error('Both GPT-4 and GPT-3.5 failed:', fallbackError);
+          throw new Error('Content generation failed with both models');
+        }
+      }
 
       // Generate portfolio ID
       const portfolioId = randomUUID();
       console.log('Portfolio ID:', portfolioId);
+
+      // Step 4: Generate images for projects
+      console.log('Step 4: Generating images for projects...');
+      try {
+        // Add timeout wrapper for image generation - 20 seconds
+        const imageGenerationPromise = fetch(`${request.url.replace('/generate', '/generate-images')}`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({ 
+            projects: portfolioContent.projects,
+            portfolioId: portfolioId,
+            userId: userId
+          })
+        });
+        
+        const imageTimeoutPromise = new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Image generation timeout')), 20000)
+        );
+        
+        const imageResponse = await Promise.race([imageGenerationPromise, imageTimeoutPromise]) as Response;
+
+        if (imageResponse.ok) {
+          const { projects: projectsWithImages } = await imageResponse.json();
+          // Update portfolio content with generated images
+          portfolioContent.projects = projectsWithImages;
+          console.log('Project images generated successfully');
+        } else {
+          console.error('Failed to generate images, continuing without them');
+        }
+      } catch (imageError) {
+        console.error('Error generating images:', imageError);
+        // Continue without images if generation fails
+      }
 
       // Don't upload CV from server - let client handle it with proper auth
       console.log('CV upload will be handled by client with proper authentication...');
@@ -118,6 +171,16 @@ export async function POST(request: NextRequest) {
       // For production, we'll return the HTML and let the client save it
       // This avoids file system issues on serverless platforms
       console.log('Portfolio generation completed successfully!');
+      
+      // Extract project images data for client-side upload
+      const projectImages = portfolioContent.projects
+        .filter((project: any) => project.imageData)
+        .map((project: any) => ({
+          name: project.name,
+          tempUrl: project.imageUrl, // The temporary DALL-E URL
+          imageData: project.imageData
+        }));
+      
       return NextResponse.json({ 
         success: true, 
         portfolioId,
@@ -129,7 +192,9 @@ export async function POST(request: NextRequest) {
           fileType: file.type,
           fileBase64: fileBase64,
           storagePath: cvPath
-        }
+        },
+        // Include project images for client-side upload
+        projectImages: projectImages
       });
     } catch (timeoutError) {
       console.error('Operation timed out:', timeoutError);

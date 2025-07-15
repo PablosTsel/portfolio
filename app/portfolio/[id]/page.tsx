@@ -7,15 +7,25 @@ import { use } from 'react';
 import { ref, getDownloadURL, getBytes } from 'firebase/storage';
 import { storage } from '@/lib/firebase';
 
-export default function PortfolioPage({ params }: { params: Promise<{ id: string }> }) {
+export default function PortfolioPage({ params }: { params: { id: string } | Promise<{ id: string }> }) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [portfolioHtml, setPortfolioHtml] = useState('');
   const [exists, setExists] = useState(false);
   const [showSuccessPopup, setShowSuccessPopup] = useState(false);
   
-  // Unwrap the params promise
-  const { id } = use(params);
+  // Handle both Promise and regular object params for Next.js compatibility
+  const getParamsId = () => {
+    if (params && typeof params === 'object' && 'then' in params) {
+      // It's a Promise, use the use() hook
+      return use(params).id;
+    } else {
+      // It's a regular object
+      return (params as { id: string }).id;
+    }
+  };
+  
+  const id = getParamsId();
 
   useEffect(() => {
     const loadPortfolio = async () => {

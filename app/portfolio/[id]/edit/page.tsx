@@ -9,15 +9,25 @@ import { storage, db } from '@/lib/firebase';
 import { doc, setDoc, serverTimestamp } from 'firebase/firestore';
 import { useAuth } from '@/lib/auth';
 
-export default function EditPortfolioPage({ params }: { params: Promise<{ id: string }> }) {
+export default function EditPortfolioPage({ params }: { params: { id: string } | Promise<{ id: string }> }) {
   const router = useRouter();
   const { user } = useAuth();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [portfolioHtml, setPortfolioHtml] = useState('');
   
-  // Unwrap the params promise
-  const { id } = use(params);
+  // Handle both Promise and regular object params for Next.js compatibility
+  const getParamsId = () => {
+    if (params && typeof params === 'object' && 'then' in params) {
+      // It's a Promise, use the use() hook
+      return use(params).id;
+    } else {
+      // It's a regular object
+      return (params as { id: string }).id;
+    }
+  };
+  
+  const id = getParamsId();
 
   useEffect(() => {
     const loadPortfolio = async () => {

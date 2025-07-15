@@ -73,17 +73,43 @@ export default function GeneratePage() {
     }, 500);
 
     try {
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('userId', user.uid);
-
-      const response = await fetch('/api/generate', {
+      // Step 1: Extract text from Word document client-side
+      setProgress(10);
+      console.log('Extracting text from Word document...');
+      
+      // Import mammoth dynamically
+      const mammoth = await import('mammoth/mammoth.browser');
+      
+      // Convert file to ArrayBuffer
+      const arrayBuffer = await file.arrayBuffer();
+      
+      // Extract text using mammoth
+      const result = await mammoth.extractRawText({ arrayBuffer });
+      const cvText = result.value;
+      
+      if (!cvText || cvText.trim().length < 100) {
+        throw new Error('Could not extract text from CV or CV is too short');
+      }
+      
+      console.log('Text extracted successfully, length:', cvText.length);
+      setProgress(30);
+      
+      // Step 2: Call the generate-light endpoint with extracted text
+      const response = await fetch('/api/generate-light', {
         method: 'POST',
-        body: formData,
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          cvText,
+          userId: user.uid,
+          fileName: file.name
+        }),
       });
 
       if (!response.ok) {
-        throw new Error('Failed to generate portfolio');
+        const errorData = await response.json();
+        throw new Error(errorData.error || 'Failed to generate portfolio');
       }
 
       const data = await response.json();

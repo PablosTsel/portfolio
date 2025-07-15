@@ -181,3 +181,4 @@
 - **Fallback Strategy**: If GPT-4 times out, automatically fallback to GPT-3.5
 - Create `netlify.toml` for proper configuration
 - In development, timeouts are less strict 
+- **Client-Side Text Extraction**: For deployment, use `/api/generate-light` with client-side text extraction via mammoth.js to avoid serverless function timeouts. The regular `/api/generate` takes 45+ seconds and will timeout on free hosting tiers. 

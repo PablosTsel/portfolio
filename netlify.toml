@@ -1,26 +1,16 @@
 [build]
-  command = "npm run build"
   publish = ".next"
 
 [functions]
-  # Optimize for function size
-  external_node_modules = ["@next/swc-linux-x64-gnu", "@next/swc-linux-x64-musl"]
-  included_files = ["!node_modules/**", "node_modules/mammoth/**", "node_modules/openai/**", "node_modules/firebase/**"]
-  node_bundler = "nft"
-  
-[[plugins]]
-  package = "@netlify/plugin-nextjs"
+  # Note: Netlify Free tier has a 10-second timeout limit
+  # The /api/generate endpoint takes ~45 seconds and will timeout
+  # Use /api/generate-light with client-side text extraction instead
+  directory = ".netlify/functions"
+  node_bundler = "esbuild"
 
-# Headers for better caching and CORS
-[[headers]]
-  for = "/api/*"
-  [headers.values]
-    Access-Control-Allow-Origin = "*"
-    Access-Control-Allow-Methods = "GET, POST, OPTIONS"
-    Access-Control-Allow-Headers = "Content-Type"
-
-# Redirect rules
 [[redirects]]
   from = "/api/*"
-  to = "/.netlify/functions/:splat"
-  status = 200 
+  to = "/.netlify/functions/api/:splat"
+  status = 200
+
+# Environment variables should be set in Netlify dashboard 

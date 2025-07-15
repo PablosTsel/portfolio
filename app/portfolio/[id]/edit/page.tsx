@@ -945,54 +945,62 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
                         return;
                       }
                       
-                      // Store file for upload when saving
-                      const projectId = projectCard.id || 'project-' + Date.now();
-                      projectCard.id = projectId;
-                      
-                      window.pendingUploads.push({
-                        type: 'report',
-                        file: file,
-                        projectId: projectId
-                      });
-                      
-                      // Update or create the project-links container
-                      let linksContainer = projectCard.querySelector('.project-links');
-                      if (!linksContainer) {
-                        linksContainer = document.createElement('div');
-                        linksContainer.className = 'project-links';
-                        projectCard.appendChild(linksContainer);
-                      }
-                      
-                      // Remove existing report link if any
-                      const existingReport = linksContainer.querySelector('.report');
-                      if (existingReport) {
-                        existingReport.remove();
-                      }
-                      
-                      // Add new report link
-                      linksContainer.insertAdjacentHTML('beforeend', \`
-                        <div class="project-link report" data-pending="true">
-                          <i class="fas fa-file-alt"></i>
-                          View Report
-                        </div>
-                      \`);
-                      
-                      // Also update the edit button to show it's been added
-                      const buttonsContainer = projectCard.querySelector('.project-edit-buttons');
-                      const reportButton = buttonsContainer ? buttonsContainer.querySelector('.add-link-btn.report') : null;
-                      
-                      if (reportButton) {
-                        const wasExisting = !!existingReport;
-                        reportButton.innerHTML = \`
+                      // Convert file to base64 data URL to survive iframe boundary
+                      const reader = new FileReader();
+                      reader.onload = function(e) {
+                        const base64Data = e.target.result;
+                        
+                        // Store file for upload when saving
+                        const projectId = projectCard.id || 'project-' + Date.now();
+                        projectCard.id = projectId;
+                        
+                        window.pendingUploads.push({
+                          type: 'report',
+                          fileData: base64Data,
+                          fileName: file.name,
+                          projectId: projectId
+                        });
+                        
+                        // Update or create the project-links container
+                        let linksContainer = projectCard.querySelector('.project-links');
+                        if (!linksContainer) {
+                          linksContainer = document.createElement('div');
+                          linksContainer.className = 'project-links';
+                          projectCard.appendChild(linksContainer);
+                        }
+                        
+                        // Remove existing report link if any
+                        const existingReport = linksContainer.querySelector('.report');
+                        if (existingReport) {
+                          existingReport.remove();
+                        }
+                        
+                        // Add new report link
+                        linksContainer.insertAdjacentHTML('beforeend', \`
+                          <div class="project-link report" data-pending="true">
                             <i class="fas fa-file-alt"></i>
-                          Report \${wasExisting ? 'Modified' : 'Added'} ✓
-                        \`;
-                        reportButton.style.borderColor = '#10b981';
-                        reportButton.style.color = '#10b981';
-                        reportButton.disabled = true;
-                      }
-                      
-                      console.log('Report file added:', file.name);
+                            View Report
+                          </div>
+                        \`);
+                        
+                        // Also update the edit button to show it's been added
+                        const buttonsContainer = projectCard.querySelector('.project-edit-buttons');
+                        const reportButton = buttonsContainer ? buttonsContainer.querySelector('.add-link-btn.report') : null;
+                        
+                        if (reportButton) {
+                          const wasExisting = !!existingReport;
+                          reportButton.innerHTML = \`
+                              <i class="fas fa-file-alt"></i>
+                            Report \${wasExisting ? 'Modified' : 'Added'} ✓
+                          \`;
+                          reportButton.style.borderColor = '#10b981';
+                          reportButton.style.color = '#10b981';
+                          reportButton.disabled = true;
+                        }
+                        
+                        console.log('Report file added:', file.name);
+                      };
+                      reader.readAsDataURL(file);
                     }
                   };
                   input.click();
@@ -2023,54 +2031,62 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
                         return;
                       }
                       
-                      // Store file for upload when saving
-                      const projectId = projectCard.id || 'project-' + Date.now();
-                      projectCard.id = projectId;
-                      
-                      window.pendingUploads.push({
-                        type: 'report',
-                        file: file,
-                        projectId: projectId
-                      });
-                      
-                      // Update or create the project-links container
-                      let linksContainer = projectCard.querySelector('.project-links');
-                      if (!linksContainer) {
-                        linksContainer = document.createElement('div');
-                        linksContainer.className = 'project-links';
-                        projectCard.appendChild(linksContainer);
-                      }
-                      
-                      // Remove existing report link if any
-                      const existingReport = linksContainer.querySelector('.report');
-                      if (existingReport) {
-                        existingReport.remove();
-                      }
-                      
-                      // Add new report link
-                      linksContainer.insertAdjacentHTML('beforeend', \`
-                        <div class="project-link report" data-pending="true">
-                          <i class="fas fa-file-alt"></i>
-                          View Report
-                        </div>
-                      \`);
-                      
-                      // Also update the edit button to show it's been added
-                      const buttonsContainer = projectCard.querySelector('.project-edit-buttons');
-                      const reportButton = buttonsContainer ? buttonsContainer.querySelector('.add-link-btn.report') : null;
-                      
-                      if (reportButton) {
-                        const wasExisting = !!existingReport;
-                        reportButton.innerHTML = \`
+                      // Convert file to base64 data URL to survive iframe boundary
+                      const reader = new FileReader();
+                      reader.onload = function(e) {
+                        const base64Data = e.target.result;
+                        
+                        // Store file for upload when saving
+                        const projectId = projectCard.id || 'project-' + Date.now();
+                        projectCard.id = projectId;
+                        
+                        window.pendingUploads.push({
+                          type: 'report',
+                          fileData: base64Data,
+                          fileName: file.name,
+                          projectId: projectId
+                        });
+                        
+                        // Update or create the project-links container
+                        let linksContainer = projectCard.querySelector('.project-links');
+                        if (!linksContainer) {
+                          linksContainer = document.createElement('div');
+                          linksContainer.className = 'project-links';
+                          projectCard.appendChild(linksContainer);
+                        }
+                        
+                        // Remove existing report link if any
+                        const existingReport = linksContainer.querySelector('.report');
+                        if (existingReport) {
+                          existingReport.remove();
+                        }
+                        
+                        // Add new report link
+                        linksContainer.insertAdjacentHTML('beforeend', \`
+                          <div class="project-link report" data-pending="true">
                             <i class="fas fa-file-alt"></i>
-                          Report \${wasExisting ? 'Modified' : 'Added'} ✓
-                        \`;
-                        reportButton.style.borderColor = '#10b981';
-                        reportButton.style.color = '#10b981';
-                        reportButton.disabled = true;
-                      }
-                      
-                      console.log('Report file added:', file.name);
+                            View Report
+                          </div>
+                        \`);
+                        
+                        // Also update the edit button to show it's been added
+                        const buttonsContainer = projectCard.querySelector('.project-edit-buttons');
+                        const reportButton = buttonsContainer ? buttonsContainer.querySelector('.add-link-btn.report') : null;
+                        
+                        if (reportButton) {
+                          const wasExisting = !!existingReport;
+                          reportButton.innerHTML = \`
+                              <i class="fas fa-file-alt"></i>
+                            Report \${wasExisting ? 'Modified' : 'Added'} ✓
+                          \`;
+                          reportButton.style.borderColor = '#10b981';
+                          reportButton.style.color = '#10b981';
+                          reportButton.disabled = true;
+                        }
+                        
+                        console.log('Report file added:', file.name);
+                      };
+                      reader.readAsDataURL(file);
                     }
                   };
                   input.click();
@@ -2297,11 +2313,36 @@ export default function EditPortfolioPage({ params }: { params: Promise<{ id: st
           const { ref, uploadBytes, getDownloadURL } = await import('firebase/storage');
           const { storage } = await import('@/lib/firebase');
           
+          console.log('Processing pending uploads:', pendingUploads);
+          
           for (const upload of pendingUploads) {
-            if (upload.type === 'report' && upload.file) {
+            if (upload.type === 'report' && (upload.file || upload.fileData)) {
               try {
+                console.log('Upload object:', upload);
+                console.log('File object:', upload.file);
+                console.log('File type:', typeof upload.file);
+                console.log('File is File?:', upload.file instanceof File);
+                
+                // Handle both old format (file) and new format (fileData)
+                let fileToUpload: Blob;
+                
+                if (upload.file && upload.file instanceof File) {
+                  // Old format - direct file (might not work across iframe boundary)
+                  fileToUpload = upload.file;
+                } else if (upload.fileData) {
+                  // New format - base64 data
+                  const base64Data = upload.fileData as string;
+                  const base64Response = await fetch(base64Data);
+                  fileToUpload = await base64Response.blob();
+                } else {
+                  console.error('No valid file data found in upload:', upload);
+                  continue;
+                }
+                
                 const reportRef = ref(storage, `users/${user.uid}/portfolios/${id}/reports/${upload.projectId}.pdf`);
-                await uploadBytes(reportRef, upload.file);
+                await uploadBytes(reportRef, fileToUpload, {
+                  contentType: 'application/pdf'
+                });
                 const downloadURL = await getDownloadURL(reportRef);
                 
                 // Update the project link with the actual URL

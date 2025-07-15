@@ -141,6 +141,7 @@
 - **Firebase Storage Infinite Retries**: Use timeouts with Promise.race() to prevent infinite retry loops when files don't exist
 - **CORS Issues**: Use Firebase SDK `getBytes()` instead of `fetch()` for Firebase Storage downloads
 - **CV Upload Permissions**: Always upload CV files from client-side with authenticated user context, not from server-side API routes
+- **Content Type for File Uploads**: When uploading files to Firebase Storage with `uploadBytes()`, always specify the `contentType` metadata. For PDFs: `contentType: 'application/pdf'`, for images: `contentType: 'image/jpeg'` or `'image/png'`, etc. This prevents files from being saved with incorrect MIME types that make them unreadable.
 
 ## Deployment on Netlify
 - **CRITICAL**: Next.js API routes don't work with `output: 'export'` (static export)
